@@ -236,20 +236,20 @@ villageApp.delete('/village/:villageId/problem/:problemId', eah(async (req, res)
 }))
 
 // API route to get trust name by its ID
-// API route to get trust name by its ID
+
 villageApp.get('/trust/:trustId', async (req, res) => {
     try {
         const trustId = req.params.trustId;
-        
-        // Validate the trustId is a proper MongoDB ID
+        console.log('Received Trust ID:', trustId);
+
         if (!mongoose.Types.ObjectId.isValid(trustId)) {
+            console.error('Invalid ObjectId');
             return res.status(400).send({ message: 'Invalid trust ID format' });
         }
 
-        // Find the trust by its ID
         const trust = await Trust.findById(trustId).select('name');
-        
         if (!trust) {
+            console.error('Trust not found');
             return res.status(404).send({ message: 'Trust not found' });
         }
 
@@ -258,12 +258,13 @@ villageApp.get('/trust/:trustId', async (req, res) => {
             trust_name: trust.name 
         });
     } catch (error) {
-        console.error('Error in /trust/:trustId:', error);
+        console.error('Error in /trust/:trustId:', error);  // <------ ADD THIS LINE
         res.status(500).send({ 
             message: 'Server error',
             error: error.message 
         });
     }
 });
+
 
 module.exports = villageApp

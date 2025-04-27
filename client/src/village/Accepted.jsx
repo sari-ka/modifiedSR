@@ -11,28 +11,6 @@ const Accepted = ({ villageId }) => {
   const [trustNames, setTrustNames] = useState({});
   const { currentVillage } = useContext(villageContext);
 
-  // Fetch trust name helper function
-  const fetchTrustName = async (trustIdObj) => {
-    try {
-      // Extract the ID string from the object
-      const trustId = trustIdObj?._id || trustIdObj;
-      
-      if (!trustId || typeof trustId !== 'string') {
-        console.error('Invalid trustId format:', trustIdObj);
-        return 'Unknown Trust';
-      }
-
-      const response = await axios.get(
-        `http://localhost:9125/village-api/trust/${trustId}`
-      );
-      
-      return response.data.trust_name;
-    } catch (error) {
-      console.error('Error fetching trust name:', error);
-      return 'Unknown Trust';
-    }
-  };
-
   // Fetch accepted problems
   useEffect(() => {
     const fetchAcceptedProblems = async () => {
@@ -67,53 +45,52 @@ const Accepted = ({ villageId }) => {
     fetchAcceptedProblems();
   }, [currentVillage]);
 
-  // Fetch trust names for all problems
-  useEffect(() => {
-    const fetchAllTrustNames = async () => {
-      if (!problems || problems.length === 0) return;
-
-      const names = {};
-      for (const problem of problems) {
-        if (problem.accepted_trust) {
-          const trustId = problem.accepted_trust._id || problem.accepted_trust;
-          if (trustId && !trustNames[trustId]) {
-            names[trustId] = await fetchTrustName(problem.accepted_trust);
-          }
-        }
-      }
-      
-      setTrustNames(prev => ({ ...prev, ...names }));
-    };
-
-    fetchAllTrustNames();
-  }, [problems]);
 
   const handleAcceptProblem = async (problemId) => {
     try {
       setStatusMessage('Processing...');
-
-      const response = await axios.put(
-        `http://localhost:9125/village-api/${currentVillage}/problem/${problemId}/village-accept`,
-        { done_by_trust: true }
+  
+      // STEP 1: Get Village ID using Village Name (currentVillage)
+      const villageResponse = await axios.get(
+        `http://localhost:9125/village-api/village/${currentVillage}`
       );
-
-      if (response.data.success) {
-        setStatusMessage('✅ Problem accepted successfully!');
-      } else {
-        setStatusMessage(response.data.message || 'Failed to accept problem');
+  
+      const villageData = villageResponse.data.payload;
+      const villageId = villageData._id;
+  
+      // STEP 2: Find the accepted trust ID for this problem
+      const problem = problems.find((p) => p._id === problemId);
+      const trustId = problem.accepted_trust?._id || problem.accepted_trust;
+  
+      if (!trustId) {
+        setStatusMessage('❌ No accepted trust found for this problem');
+        return;
       }
-
+  
+      // STEP 3: Assign the problem to trust
+      const assignResponse = await axios.post(
+        `http://localhost:9125/trust-api/trust/assign-problem`,
+        { trustId, villageId, problemId }
+      );
+  
+      if (assignResponse.data.success) {
+        setStatusMessage('✅ Problem assigned successfully to trust!');
+      } else {
+        setStatusMessage(assignResponse.data.message || 'Failed to assign problem to trust');
+      }
+  
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (error) {
-      console.error('Error accepting problem:', error);
+      console.error('Error assigning problem to trust:', error);
       setStatusMessage(
         error.response?.data?.message ||
         error.message ||
-        'Failed to accept problem'
+        'Failed to assign problem to trust'
       );
       setTimeout(() => setStatusMessage(''), 3000);
     }
   };
+  
 
   if (loading) {
     return (
@@ -153,11 +130,6 @@ const Accepted = ({ villageId }) => {
                   <h5>{problem.title}</h5>
                   <p>{problem.description}</p>
                   <small className="text-muted">Estimated: ₹{problem.estimatedamt}</small>
-                  {problem.accepted_trust && (
-                    <p className="mt-2">
-                      <strong>Trust Name:</strong> {trustNames[trustId] || 'Loading...'}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <span

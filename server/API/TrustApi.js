@@ -140,4 +140,38 @@ trustApp.get('/trust/:trustName/problem-status', eah(async (req, res) => {
   res.status(200).send({ message: "Trust problem status summary", payload: summary });
 }));
 
+// ✅ Insert assigned problem into trust
+trustApp.post('/trust/assign-problem', eah(async (req, res) => {
+  const { trustId, villageId, problemId } = req.body;
+
+  if (!trustId || !villageId || !problemId) {
+    return res.status(400).send({ message: "Missing parameters" });
+  }
+
+  const trust = await Trust.findById(trustId);
+  if (!trust) return res.status(404).send({ message: "Trust not found" });
+
+  const village = await Village.findById(villageId);
+  if (!village) return res.status(404).send({ message: "Village not found" });
+
+  const problem = village.problems.id(problemId);
+  if (!problem) return res.status(404).send({ message: "Problem not found" });
+
+  trust.assigned_problems.push({
+    problem_id: problemId,
+    village_id: villageId,
+    status: "upcoming",
+    posted_time: problem.posted_time,
+    money_trust: problem.estimatedamt,
+  });
+
+  await trust.save();
+  problem.status = "upcoming"; // Update village problem status also
+  await village.save();
+
+  res.status(200).send({ success: true, message: "Problem assigned to trust", payload: trust });
+}));
+
+
+
 module.exports = trustApp;

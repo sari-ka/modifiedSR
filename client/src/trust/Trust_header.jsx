@@ -4,8 +4,8 @@ import { useContext } from 'react';
 function Trust_header() {
   const { currentTrust } = useContext(TrustContext);
   return (
-    <div className='mt-3 ms-3'>
-        <ul className="nav d-flex justify-content-between bg-secondary">
+    <div>
+        <ul className="nav d-flex justify-content-between bg-secondary mb-5">
             <p className="display-6">SupportRoots</p>
             <div className='d-flex'>
             <li className="nav-item">
@@ -18,7 +18,7 @@ function Trust_header() {
                 <Link className="nav-link fs-4" to={`profile/${currentTrust}`}>Profile</Link>
             </li>
             </div>
-        </ul>
+        </ul >
       <Outlet></Outlet>
     </div>
   )
