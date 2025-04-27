@@ -1,0 +1,107 @@
+/* Layout wrapper */
+.layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s ease;
+  }
+  
+  /* Topbar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+  }
+  
+  .open-btn {
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: #333;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+  
+  .logo {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background-color: #7c789a;
+    color: white;
+    overflow-x: hidden;
+    transition: left 0.3s ease;
+    padding: 20px;
+    z-index: 1000;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .close-btn {
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  /* Sidebar Links */
+  .nav-link {
+    color: white;
+    font-size: 18px;
+    margin-bottom: 10px;
+    /* transition: background 0.2s; */
+  }
+  
+  .nav-link:hover {
+    background-color: #495057;
+    border-radius: 4px;
+  }
+  
+  /* Main Content */
+  .main-content {
+    margin-top: 20px;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+  }
+  
+  /* Move content when sidebar open */
+  .sidebar-open .main-content {
+    margin-left: 250px;
+  }
+
+  .topbar {
+    background-color: #f8f9fa;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .topbar-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .topbar-link:hover {
+    text-decoration: underline;
+  }
+  

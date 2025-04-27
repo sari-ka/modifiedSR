@@ -1,0 +1,320 @@
+#village-req
+
+###
+GET http://localhost:9125/village-api/village
+
+### get where done_by_trust is "accepted"
+get http://localhost:9125/village-api/Tangeda/problems/accepted
+
+###
+GET http://localhost:9125/village-api/village/Tangeda
+
+###
+POST http://localhost:9125/village-api/village
+Content-Type: application/json
+
+{
+  "name": "Lakshmi Nagar",
+  "email": "sarpanch.lakshminagar@example.com",
+  "password": "securePassword123",
+  "state": "Telangana",
+  "pincode": "500001",
+  "contact": "9876543210",
+  "approved": true,
+  "sarpanch": true,
+  "problems": [
+    {
+      "title": "Rebuild Community Hall",
+      "estimatedamt": 500000,
+      "description": "Need to rebuild the old community hall to host events.",
+      "status": "upcoming",
+      "done_by_village": "accepted",
+      "done_by_trust": "accepted"
+    },
+    {
+      "title": "Fix Drinking Water Supply",
+      "estimatedamt": 200000,
+      "description": "Pipes are leaking. Need urgent repairs.",
+      "status": "ongoing",
+      "done_by_village": "started",
+      "done_by_trust": "started"
+    }
+  ],
+  "feedback": [
+    {
+      "trust_id": "662b978ee3dc0b9ed08345c1",
+      "message": "Very helpful trust, quick response!",
+      "rating": 5
+    }
+  ],
+  "money_lent": [
+    {
+      "user_id": "662b97c3e3dc0b9ed08345c3",
+      "amount": 25000
+    }
+  ],
+  "trusts": [
+    {
+      "trust_name": "Helping Hands Trust",
+      "total_money": 100000
+    }
+  ],
+  "user": [
+    {
+      "user_name": "Ravi Kumar",
+      "total_money": 5000
+    }
+  ],
+  "rating": 4.5
+}
+
+###
+PUT http://localhost:9125/village-api/Lakshmi Nagar/add-problem
+Content-Type: application/json
+
+{
+  "title": "water",
+  "description": "ground pipeline broken",
+  "estimatedamt": 100
+}
+
+### put trust accept status
+put http://localhost:9125/village-api/680dfb7050b04827e6f157ba/problem/680dfb9650b04827e6f157e1/680dfb3d50b04827e6f157b2/accept
+Content-Type: application/json
+
+{
+  "done_by_village": "accepted"
+}
+
+### put village accept status
+PUT http://localhost:9125/village-api/gadwal/problem/680dbfcd6e8961a5bb4bb934/village-accept
+Content-Type: application/json
+
+{
+  "done_by_village": "accepted"
+}
+
+# trust-req
+
+###
+GET http://localhost:9125/trust-api/trust 
+
+###
+get http://localhost:9125/trust-api/trust/Helping Hands Trust
+
+###
+POST http://localhost:9125/trust-api/trust
+Content-Type: application/json
+
+{
+  "name": "Helping Hands Trust",
+  "username": "helpinghands",
+  "email": "helpinghands@example.com",
+  "password": "trustPassword123",
+  "address": "123 Charity Lane, Hyderabad, Telangana",
+  "contact": "9123456789",
+  "approved": true,
+  
+  "projects": {
+    "past": [
+      {
+        "title": "Clean Water Project",
+        "description": "Installed water purifiers in 5 villages.",
+        "completionDate": "2024-12-01",
+        "money": 500000
+      }
+    ],
+    "ongoing": [
+      {
+        "title": "School Renovation",
+        "description": "Renovating primary school buildings.",
+        "startDate": "2025-03-10",
+        "money": 750000,
+        "progressUpdates": [
+          {
+            "date": "2025-04-20",
+            "update": "Foundation work completed."
+          },
+          {
+            "date": "2025-04-25",
+            "update": "Walls under construction."
+          }
+        ]
+      }
+    ],
+    "upcoming": [
+      {
+        "title": "Healthcare Camp",
+        "description": "Organizing free health check-ups for villagers.",
+        "money": 200000
+      }
+    ]
+  },
+
+  "funding": {
+    "total_received": 1500000,
+    "total_disbursed": 1250000
+  },
+
+  "feedback": [
+    {
+      "village_id": "662c1234abcd5678ef901234",
+      "message": "Amazing support during hard times!",
+      "rating": 5
+    }
+  ],
+
+  "assigned_problems": [
+    {
+      "problem_id": "662c5678abcd1234ef905678",
+      "village_id": "662c1234abcd5678ef901234",
+      "status": "ongoing",
+      "posted_time": "2025-04-10",
+      "money_sanction_time": "2025-04-15",
+      "solved_time": null,
+      "money_trust": 500000
+    }
+  ],
+
+  "rating": 4.7
+}
+
+###
+PUT http://localhost:9125/trust-api/trust
+Content-Type: application/json
+
+{
+  "name": "Helping Hands Trust",
+  "username": "helpinghands",
+  "email": "helpinghands@example.com",
+  "password": "Abc123",
+  "address": "123 Charity Lane, Hyderabad, Telangana",
+  "contact": "9123456789",
+  "approved": true,
+  
+  "projects": {
+    "past": [
+      {
+        "title": "Clean Water Project",
+        "description": "Installed water purifiers in 5 villages.",
+        "completionDate": "2024-12-01",
+        "money": 500000
+      }
+    ],
+    "ongoing": [
+      {
+        "title": "School Renovation",
+        "description": "Renovating primary school buildings.",
+        "startDate": "2025-03-10",
+        "money": 750000,
+        "progressUpdates": [
+          {
+            "date": "2025-04-20",
+            "update": "Foundation work completed."
+          },
+          {
+            "date": "2025-04-25",
+            "update": "Walls under construction."
+          }
+        ]
+      }
+    ],
+    "upcoming": [
+      {
+        "title": "Healthcare Camp",
+        "description": "Organizing free health check-ups for villagers.",
+        "money": 200000
+      }
+    ]
+  },
+
+  "funding": {
+    "total_received": 1500000,
+    "total_disbursed": 1250000
+  },
+
+  "feedback": [
+    {
+      "village_id": "662c1234abcd5678ef901234",
+      "message": "Amazing support during hard times!",
+      "rating": 5
+    }
+  ],
+
+  "assigned_problems": [
+    {
+      "problem_id": "662c5678abcd1234ef905678",
+      "village_id": "662c1234abcd5678ef901234",
+      "status": "ongoing",
+      "posted_time": "2025-04-10",
+      "money_sanction_time": "2025-04-15",
+      "solved_time": null,
+      "money_trust": 500000
+    }
+  ],
+
+  "rating": 4.7
+}
+
+
+
+
+# individual-req
+
+###
+GET http://localhost:9125/individual-api/individual
+
+###
+POST http://localhost:9125/individual-api/individual
+Content-Type: application/json
+
+{
+  "username": "John Doe",
+  "name": "John Doe",
+  "email": "johndoe@example.com",
+  "password": "securepassword",
+  "address": "123 Main Street, City, Country",
+  "contact": "9876543210",
+  "funding": [
+    {
+      "recipient_type": "Trust",
+      "recipient_id": "65d4c0f5e1234567890abcde",
+      "amount": 5000
+    }
+  ],
+  "resources_shared": [
+    {
+      "recipient_type": "Village",
+      "recipient_id": "65d4c0f5e1234567890abcd1",
+      "resources": ["Books", "Clothes"]
+    }
+  ],
+  "rating": 4.5
+}
+
+###
+PUT http://localhost:9125/individual-api/individual
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "johndoe@example.com",
+  "password": "securepassword",
+  "address": "nMain Street, City, Country",
+  "contact": "9876543210",
+  "funding": [
+    {
+      "recipient_type": "Trust",
+      "recipient_id": "65d4c0f5e1234567890abcde",
+      "amount": 5000
+    }
+  ],
+  "resources_shared": [
+    {
+      "recipient_type": "Village",
+      "recipient_id": "65d4c0f5e1234567890abcd1",
+      "resources": ["Books", "Clothes"]
+    }
+  ],
+  "rating": 4.5
+}
