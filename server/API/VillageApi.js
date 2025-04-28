@@ -181,6 +181,7 @@ villageApp.get('/:villageName/problems/accepted', async (req, res) => {
     }
   });
   
+  // update as start
   villageApp.put('/village/:villageId/:problemId/start', eah(async (req, res) => {
       const { villageId, problemId } = req.params;
     
@@ -198,6 +199,30 @@ villageApp.get('/:villageName/problems/accepted', async (req, res) => {
         const res = await Trust.findOneAndUpdate(
           { "assigned_problems.problem_id": problemId },
           { $set: { "assigned_problems.$.status": "ongoing" } }
+        );
+      }
+      await village.save();
+      res.send({ message: "Trust status updated", payload: problem });
+    }));
+
+    // update as done
+    villageApp.put('/village/:villageId/:problemId/done', eah(async (req, res) => {
+      const { villageId, problemId } = req.params;
+    
+      const village = await Village.findById(villageId);
+      if (!village) return res.status(404).send({ message: "Village not found" });
+    
+      const problem = village.problems.id(problemId);
+      if (!problem) return res.status(404).send({ message: "Problem not found" });
+    
+      problem.done_by_village = "done";
+    
+      // Optional: auto-move to 'past' if village also completed
+      if (problem.done_by_trust==="done") {
+        problem.status = 'past';
+        const res = await Trust.findOneAndUpdate(
+          { "assigned_problems.problem_id": problemId },
+          { $set: { "assigned_problems.$.status": "past" } }
         );
       }
       await village.save();
@@ -310,6 +335,26 @@ villageApp.get("/:villageName/upcoming", async (req, res) => {
       res.status(500).json({ message: "Server Error" });
     }
   });
+
+  // api to get ongoing 
+villageApp.get("/:villageName/ongoing", async (req, res) => {
+  try {
+    const { villageName } = req.params;
+  //   console.log(villageName)
+    const village = await Village.findOne({name:villageName});
+    if (!village) {
+      return res.status(404).json({ message: "Village not found" });
+    }
+    // Filter only upcoming problems
+    const upcomingProblems = village.problems.filter(
+      (problem) => problem.status === "ongoing"
+    );
+    res.json(upcomingProblems);
+    console.log(upcomingProblems)
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
   
   villageApp.get("/:villageId/problem/:problemId", async (req, res) => {
     try {

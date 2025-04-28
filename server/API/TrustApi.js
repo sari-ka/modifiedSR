@@ -65,25 +65,28 @@ trustApp.put('/trust/:villageId/:problemId/start', eah(async (req, res) => {
     res.send({ message: "Trust status updated", payload: problem });
   }));
 // ✅ Update a problem's status by trust as done
-  trustApp.put('/trust/done', eah(async (req, res) => {
-    const { villageId, problemId } = req.body;
-  
-    const village = await Village.findById(villageId);
-    if (!village) return res.status(404).send({ message: "Village not found" });
-  
-    const problem = village.problems.id(problemId);
-    if (!problem) return res.status(404).send({ message: "Problem not found" });
-  
-    problem.done_by_trust = "done";
-  
-    // Optional: auto-move to 'past' if village also completed
-    if (problem.done_by_village==="done") {
-      problem.status = 'past';
-    }
-  
-    await village.save();
-    res.send({ message: "Trust status updated", payload: problem });
-  }));
+trustApp.put('/trust/:villageId/:problemId/done', eah(async (req, res) => {
+  const { villageId, problemId } = req.params;
+
+  const village = await Village.findById(villageId);
+  if (!village) return res.status(404).send({ message: "Village not found" });
+
+  const problem = village.problems.id(problemId);
+  if (!problem) return res.status(404).send({ message: "Problem not found" });
+
+  problem.done_by_trust = "done";
+
+  // Optional: auto-move to 'past' if village also completed
+  if (problem.done_by_village==="done") {
+    problem.status = 'past';
+    const res = await Trust.findOneAndUpdate(
+      { "assigned_problems.problem_id": problemId },
+      { $set: { "assigned_problems.$.status": "past" } }
+    );
+  }
+  await village.save();
+  res.send({ message: "Trust status updated", payload: problem });
+}));
 
 // ✅ Get problems associated with a trust (via trust name or id)
 trustApp.get('/trust/:trustName/problems', eah(async (req, res) => {
@@ -199,5 +202,28 @@ trustApp.get("/:trustName/upcoming", async (req, res) => {
       res.status(500).json({ message: error });
     }
   });
+
+  // get ongoing project
+trustApp.get("/:trustName/ongoing", async (req, res) => {
+  try {
+    const { trustName } = req.params;
+    // console.log(villageName)
+    const trust = await Trust.findOne({name:trustName});
+
+    if (!trust) {
+      return res.status(404).json({ message: "trust not found" });
+    }
+
+    // Filter only upcoming problems
+    const ongoingProblems = trust.assigned_problems.filter(
+      (problem) => problem.status === "ongoing"
+    );
+
+    res.json(ongoingProblems);
+    console.log(ongoingProblems)
+  } catch (error) {
+    res.status(500).json({ message: error });
+  }
+});
 
 module.exports = trustApp;

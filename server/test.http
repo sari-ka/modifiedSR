@@ -3,6 +3,10 @@
 ###
 GET http://localhost:9125/village-api/village
 
+###
+GET http://localhost:9125/village-api/Lakshmi Nagar/ongoing
+
+
 ### get where done_by_trust is "accepted"
 get http://localhost:9125/village-api/Tangeda/problems/accepted
 
