@@ -49,6 +49,7 @@ const Accepted = ({ villageId }) => {
   const handleAcceptProblem = async (problemId) => {
     try {
       setStatusMessage('Processing...');
+      const res = await axios.put( `http://localhost:9125/village-api/${currentVillage}/problem/${problemId}/village-accept`)
   
       // STEP 1: Get Village ID using Village Name (currentVillage)
       const villageResponse = await axios.get(

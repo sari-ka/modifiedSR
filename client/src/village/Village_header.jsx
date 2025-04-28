@@ -55,6 +55,16 @@ function Village_header() {
               Accepted Problems
             </Link>
           </li>
+          <li className="nav-item">
+            <Link className="nav-link" to="upcoming" onClick={closeSidebar}>
+              Upcoming projects
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link className="nav-link" to="ongoing" onClick={closeSidebar}>
+              Ongoing projects
+            </Link>
+          </li>
           <li className="nav-item mt-4">
             <button onClick={handleLogout} className="btn btn-danger w-100 p-2">
               Logout

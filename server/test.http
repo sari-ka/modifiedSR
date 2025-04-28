@@ -94,7 +94,16 @@ Content-Type: application/json
   "done_by_village": "accepted"
 }
 
+###
+GET http://localhost:9125/village-api/Lakshmi Nagar/upcoming
+
+###
+PUT http://localhost:9125/village-api/village/680dfb7050b04827e6f157ba/680ef4862d8c80021269a3b3/start
+
 # trust-req
+
+###
+PUT http://localhost:9125/trust-api/trust/680dfb7050b04827e6f157ba/680ef4862d8c80021269a3b3/start
 
 ###
 GET http://localhost:9125/trust-api/trust 
@@ -257,6 +266,11 @@ Content-Type: application/json
 }
 
 
+###
+GET http://localhost:9125/trust-api/Sarika/upcoming
+
+###
+GET http://localhost:9125/village-api/680dfb7050b04827e6f157ba/problem/680ef4862d8c80021269a3b3
 
 
 # individual-req

@@ -56,7 +56,7 @@ const TrustSchema = new mongoose.Schema({
 
   assigned_problems: [
     {
-      problem_id: { type: mongoose.Schema.Types.ObjectId },
+      problem_id: { type: mongoose.Schema.Types.ObjectId, unique:true },
       village_id: { type: mongoose.Schema.Types.ObjectId, ref: "Village" },
   
       status: {

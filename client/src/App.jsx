@@ -21,6 +21,10 @@ import Village_profile from './village/Village_profile'
 import Individual_profile from './individual/Individual_profile'
 import Add_prob from './village/Add_prob'
 import Accepted from './village/Accepted'
+import Upcoming_v from './village/Upcoming_v'
+import Upcoming_tr from './trust/Upcoming_tr'
+import Ongoing_tr from './trust/Ongoing_tr'
+import Ongoing_v from './village/Ongoing_v'
 function App() {
 
   let b = createBrowserRouter([
@@ -63,7 +67,16 @@ function App() {
             {
               path:'users',
               element:<Users/>
-            }]
+            },
+            {
+              path:'upcoming',
+              element:<Upcoming_tr/>
+            },
+            {
+              path:'ongoing',
+              element:<Ongoing_tr/>
+            }
+          ]
           }
 
           ]
@@ -107,6 +120,14 @@ function App() {
             {
               path:'accepted',
               element:<Accepted/>
+            },
+            {
+              path:'upcoming',
+              element:<Upcoming_v/>
+            },
+            {
+              path:'ongoing',
+              element:<Ongoing_v/>
             }
           ]
           }
@@ -143,7 +164,8 @@ function App() {
             {
               path:'trusts',
               element:<Trusts/>
-            }]
+            }         
+          ]
           }
           ]
         }
