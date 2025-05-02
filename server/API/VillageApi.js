@@ -5,6 +5,49 @@ const Village = require('../models/VillageSchema')
 const Trust = require('../models/TrustSchema')
 villageApp.use(exp.json())
 
+// village to get updated who accepted the problem
+villageApp.get('/:villageName/problems/accepted-with-village', async (req, res) => {
+  const villageName = req.params.villageName;
+
+  try {
+    // Find the village and populate the accepted trust name
+    const village = await Village.findOne({ name: villageName })
+      .populate('problems.accepted_trust', 'name'); // Use 'name' if that's the correct field in TrustSchema
+
+    if (!village) {
+      return res.status(404).send({ message: 'Village not found' });
+    }
+
+    // Filter and format accepted problems
+    const acceptedProblems = village.problems
+      .filter((problem) => problem.done_by_trust === 'accepted')
+      .map((problem) => ({
+        _id: problem._id,
+        title: problem.title,
+        description: problem.description,
+        estimatedamt: problem.estimatedamt,
+        status: problem.status,
+        accepted_trust: problem.accepted_trust
+          ? {
+              _id: problem.accepted_trust._id,
+              trust_name: problem.accepted_trust.name // use `.name`, not `.trust_name`
+            }
+          : null
+      }));
+
+    res.status(200).send({
+      message: 'Accepted problems with village and trust info',
+      village_name: village.name,
+      payload: acceptedProblems
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Server error' });
+  }
+});
+
+
+
 // Get all villages
 villageApp.get('/village', eah(async (req, res) => {
     const villageList = await Village.find();

@@ -1,5 +1,9 @@
 #village-req
 
+
+###
+get http://localhost:9125/village-api/Tangeda/problems/accepted-with-village
+
 ###
 GET http://localhost:9125/village-api/village
 
@@ -113,7 +117,7 @@ PUT http://localhost:9125/trust-api/trust/680dfb7050b04827e6f157ba/680ef4862d8c8
 GET http://localhost:9125/trust-api/trust 
 
 ###
-get http://localhost:9125/trust-api/trust/Helping Hands Trust
+get http://localhost:9125/trust-api/trust/Siri
 
 ###
 POST http://localhost:9125/trust-api/trust

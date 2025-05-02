@@ -1,18 +1,20 @@
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { TrustContext } from "../Context/LoginT_Context";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const TrustProfile = () => {
   const { currentTrust } = useContext(TrustContext);
   const [trustDetails, setTrustDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [mapLoading, setMapLoading] = useState(false);
   const [projects, setProjects] = useState({
     past: [],
     ongoing: [],
-    upcoming: []
+    upcoming: [],
+    pending: []
   });
   const [showModal, setShowModal] = useState(false);
   const [modalProjects, setModalProjects] = useState([]);
@@ -20,16 +22,24 @@ const TrustProfile = () => {
   const [topVillages, setTopVillages] = useState([]);
   const [villagesLoading, setVillagesLoading] = useState(false);
   const [villagesError, setVillagesError] = useState(null);
-  const MAPS_API_KEY = "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678"; // Replace with your actual key
+  const [villages, setVillages] = useState([]);
+  const MAPS_API_KEY = "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678";
 
   const projectCounts = {
     past: projects.past.length,
     ongoing: projects.ongoing.length,
-    upcoming: projects.upcoming.length
+    upcoming: projects.upcoming.length,
+    pending: projects.pending.length
   };
 
   const handleProjectClick = (projectType) => {
-    setModalTitle(`${projectType} Projects`);
+    const titleMap = {
+      past: "Past Village Support",
+      ongoing: "Ongoing Village Support",
+      upcoming: "Future Village Support",
+      pending: "Pending Village Support"
+    };
+    setModalTitle(titleMap[projectType] || "Village Support");
     setModalProjects(projects[projectType]);
     setShowModal(true);
   };
@@ -37,42 +47,100 @@ const TrustProfile = () => {
   // Get trust ID with localStorage fallback
   const trustname = currentTrust || localStorage.getItem("trustname");
 
-  // Fetch trust details
+  // Function to get village details by ID
+  const getVillageDetails = (villageId) => {
+    if (!villages.length) return { village_name: "Unknown Village", name: "Unknown Village" };
+
+    // Ensure both are strings for comparison
+    const village = villages.find(v => String(v._id) === String(villageId));
+
+    if (!village) {
+      console.warn(`No matching village found for id: ${villageId}`);
+      return { village_name: "Unknown Village", name: "Unknown Village" };
+    }
+
+    return village;
+  };
+
+  // Fetch trust details and projects
   const getTrust = async () => {
     if (!trustname) {
       setError("No trust selected");
+      setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:9125/trust-api/trust/${trustname}`);
-      if (res.data.payload && res.data.payload.length > 0) {
-        const trustData = res.data.payload[0];
+      setError(null);
+      
+      // Fetch trust details
+      const trustRes = await axios.get(`http://localhost:9125/trust-api/trust/${trustname}`);
+      if (trustRes.data.payload && trustRes.data.payload.length > 0) {
+        const trustData = trustRes.data.payload[0];
         setTrustDetails(trustData);
-        setProjects({
-          past: trustData.projects?.past || [],
-          ongoing: trustData.projects?.ongoing || [],
-          upcoming: trustData.projects?.upcoming || []
-        });
+        
+        // Organize projects by status
+        const organizedProjects = {
+          past: [],
+          ongoing: [],
+          upcoming: [],
+          pending: []
+        };
+        
+        if (trustData.assigned_problems) {
+          trustData.assigned_problems.forEach(project => {
+            if (project.status && organizedProjects[project.status]) {
+              organizedProjects[project.status].push(project);
+            }
+          });
+        }
+        
+        setProjects(organizedProjects);
         localStorage.setItem("trustData", JSON.stringify(trustData));
       } else {
         throw new Error("No trust data found");
       }
     } catch (err) {
+      console.error("Error fetching trust:", err);
       setError(err.message);
+      
+      // Try to load from cache
       const cachedData = localStorage.getItem("trustData");
       if (cachedData) {
         const parsedData = JSON.parse(cachedData);
         setTrustDetails(parsedData);
-        setProjects({
-          past: parsedData.projects?.past || [],
-          ongoing: parsedData.projects?.ongoing || [],
-          upcoming: parsedData.projects?.upcoming || []
-        });
+        
+        // Organize cached projects
+        const organizedProjects = {
+          past: [],
+          ongoing: [],
+          upcoming: [],
+          pending: []
+        };
+        
+        if (parsedData.assigned_problems) {
+          parsedData.assigned_problems.forEach(project => {
+            if (project.status && organizedProjects[project.status]) {
+              organizedProjects[project.status].push(project);
+            }
+          });
+        }
+        
+        setProjects(organizedProjects);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch all villages data
+  const fetchAllVillages = async () => {
+    try {
+      const response = await axios.get('http://localhost:9125/village-api/village');
+      setVillages(response.data.payload || []);
+    } catch (err) {
+      console.error("Error fetching all villages:", err);
     }
   };
 
@@ -87,11 +155,45 @@ const TrustProfile = () => {
       setVillagesLoading(true);
       setVillagesError(null);
       
+      // First try to get villages from feedback
+      if (trustDetails?.feedback?.length > 0) {
+        const villageIds = trustDetails.feedback.map(f => f.village_id);
+        const uniqueVillageIds = [...new Set(villageIds)];
+        
+        // Fetch village details for these IDs
+        const villagesData = await Promise.all(
+          uniqueVillageIds.map(async id => {
+            try {
+              const res = await axios.get(`http://localhost:9125/village-api/village/${id}`);
+              return res.data.payload;
+            } catch (err) {
+              console.error(`Error fetching village ${id}:`, err);
+              return null;
+            }
+          })
+        );
+        
+        // Filter out nulls and map to required format
+        const validVillages = villagesData.filter(v => v).map(village => ({
+          id: village._id,
+          name: village.village_name || "Unknown Village",
+          rating: trustDetails.feedback.find(f => f.village_id === village._id)?.rating || 0,
+          message: trustDetails.feedback.find(f => f.village_id === village._id)?.message || "No feedback"
+        }));
+        
+        // Sort by rating and take top 3
+        const sortedVillages = [...validVillages].sort((a, b) => b.rating - a.rating);
+        setTopVillages(sortedVillages.slice(0, 3));
+        localStorage.setItem("topVillages", JSON.stringify(sortedVillages.slice(0, 3)));
+        return;
+      }
+      
+      // Fallback to villages API if no feedback
       const response = await axios.get(
-        `http://localhost:9125/trust-api/trust/${trustname}/villages`
+        `http://localhost:9125/trust-api/trust/${trustname}`
       );
 
-      const villagesData = response.data.payload || JSON.parse(localStorage.getItem("trustVillages")) || [];
+      const villagesData = response.data.payload || [];
       
       // Sort by total help provided and take top 3
       const sortedVillages = [...villagesData].sort((a, b) => (b.total_help || 0) - (a.total_help || 0));
@@ -181,25 +283,16 @@ const TrustProfile = () => {
 
   // Initial data load
   useEffect(() => {
-    // Load from cache first for instant display
-    const cachedData = localStorage.getItem("trustData");
-    const cachedVillages = localStorage.getItem("topVillages");
-    const cachedMap = localStorage.getItem("trustMap");
-
-    if (cachedData) setTrustDetails(JSON.parse(cachedData));
-    if (cachedVillages) setTopVillages(JSON.parse(cachedVillages));
-    if (cachedMap) setImageUrl(cachedMap);
-
-    // Then fetch fresh data
     if (trustname) {
       getTrust();
-      fetchTopVillages();
+      fetchAllVillages();
     }
   }, [trustname]);
 
-  // Get map when trust details change
+  // Fetch villages and map when trust details change
   useEffect(() => {
     if (trustDetails) {
+      fetchTopVillages();
       getTrustImage();
     }
   }, [trustDetails]);
@@ -228,16 +321,15 @@ const TrustProfile = () => {
 
   return (
     <div className="container trust-profile-container">
-      {/* Loading state for map */}
       {mapLoading && (
-        <div className="alert loading-state">
+        <div className="alert alert-info loading-state">
           <div className="spinner-border me-2" role="status"></div>
           Loading map...
         </div>
       )}
 
       {error && (
-        <div className="alert error-state">
+        <div className="alert alert-danger error-state">
           <i className="bi bi-exclamation-triangle-fill me-2"></i>
           {error}
         </div>
@@ -247,8 +339,9 @@ const TrustProfile = () => {
         <div>
           {/* Row 1 */}
           <div className="row mb-4">
+            {/* Trust Info Card */}
             <div className="col-md-5">
-              <div className="card profile-card">
+              <div className="card profile-card shadow">
                 <div className="card-body">
                   <div className="d-flex align-items-center">
                     <div className="me-4">
@@ -256,35 +349,35 @@ const TrustProfile = () => {
                         src={imageUrl}
                         alt={`${trustDetails.name} location`}
                         className="img-fluid rounded-circle profile-image"
-                        style={{ objectFit: "cover" }}
+                        style={{ width: "150px", height: "150px", objectFit: "cover" }}
                       />
                     </div>
                     <div>
                       <h2 className="trust-name">{trustDetails.name}</h2>
                       <ul className="list-unstyled">
                         <li className="mb-2">
-                          <span className="badge profile-badge me-2">
-                            <i className="bi bi-envelope profile-icon"></i>
+                          <span className="badge bg-primary me-2">
+                            <i className="bi bi-envelope text-white"></i>
                           </span>
-                          {trustDetails.email}
+                          {trustDetails.email || "Not provided"}
                         </li>
                         <li className="mb-2">
-                          <span className="badge profile-badge me-2">
-                            <i className="bi bi-geo-alt profile-icon"></i>
+                          <span className="badge bg-primary me-2">
+                            <i className="bi bi-geo-alt text-white"></i>
                           </span>
-                          {trustDetails.address}
+                          {trustDetails.address || "Not provided"}
                         </li>
                         <li>
-                          <span className="badge profile-badge me-2">
-                            <i className="bi bi-telephone profile-icon"></i>
+                          <span className="badge bg-primary me-2">
+                            <i className="bi bi-telephone text-white"></i>
                           </span>
-                          {trustDetails.contact}
+                          {trustDetails.contact || "Not provided"}
                         </li>
                       </ul>
                     </div>
                   </div>
                   <button
-                    className="btn map-button mt-3 w-100 py-2"
+                    className="btn btn-primary mt-3 w-100 py-2"
                     onClick={openGoogleMaps}
                   >
                     <i className="bi bi-map me-2"></i> Open in Google Maps
@@ -295,8 +388,8 @@ const TrustProfile = () => {
 
             {/* Stats Section */}
             <div className="col-md-7">
-              <div className="card stats-card">
-                <div className="card-header stats-header">
+              <div className="card stats-card shadow">
+                <div className="card-header bg-primary text-white">
                   <h3 className="mb-0">
                     <i className="bi bi-bar-chart-line me-2"></i>
                     Trust Statistics
@@ -305,7 +398,7 @@ const TrustProfile = () => {
                 <div className="card-body">
                   <div className="row">
                     <div className="col-md-6">
-                      <div className="stat-item">
+                      <div className="stat-item mb-3">
                         <h5>Total Funding Received</h5>
                         <p className="stat-value text-success">
                           ₹{trustDetails.funding?.total_received?.toLocaleString() || 0}
@@ -313,7 +406,7 @@ const TrustProfile = () => {
                       </div>
                     </div>
                     <div className="col-md-6">
-                      <div className="stat-item">
+                      <div className="stat-item mb-3">
                         <h5>Total Disbursed</h5>
                         <p className="stat-value text-primary">
                           ₹{trustDetails.funding?.total_disbursed?.toLocaleString() || 0}
@@ -321,9 +414,9 @@ const TrustProfile = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="row mt-3">
+                  <div className="row">
                     <div className="col-md-6">
-                      <div className="stat-item">
+                      <div className="stat-item mb-3">
                         <h5>Trust Rating</h5>
                         <p className="stat-value text-warning">
                           {trustDetails.rating || 0}/5
@@ -332,7 +425,7 @@ const TrustProfile = () => {
                       </div>
                     </div>
                     <div className="col-md-6">
-                      <div className="stat-item">
+                      <div className="stat-item mb-3">
                         <h5>Approval Status</h5>
                         <p className="stat-value">
                           {trustDetails.approved ? (
@@ -353,8 +446,8 @@ const TrustProfile = () => {
           <div className="row">
             {/* Villages Section */}
             <div className="col-md-5">
-              <div className="card villages-card">
-                <div className="card-header villages-header">
+              <div className="card villages-card shadow">
+                <div className="card-header bg-primary text-white">
                   <h4 className="mb-0">
                     <i className="bi bi-people-fill me-2"></i>
                     Top Helped Villages
@@ -367,25 +460,28 @@ const TrustProfile = () => {
                     </div>
                   ) : villagesError ? (
                     <div className="alert alert-warning">{villagesError}</div>
-                  ) : topVillages.length > 0 ? (
+                  ) : trustDetails.feedback?.length > 0 ? (
                     <div className="list-group">
-                      {topVillages.map((village) => (
-                        <div key={village.id} className="list-group-item">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <span className="badge bg-primary me-2">#{village.rank}</span>
-                              <strong>{village.name}</strong>
-                            </div>
-                            <div className="text-end">
-                              <div className="text-success">₹{village.helpAmount.toLocaleString()}</div>
-                              <small className="text-muted">{village.projects} projects</small>
+                      {trustDetails.feedback.slice(0, 3).map((feedback, idx) => {
+                        const village = getVillageDetails(feedback.village_id);
+                        return (
+                          <div key={idx} className="list-group-item">
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <span className="badge bg-primary me-2">#{idx + 1}</span>
+                                <strong>Village: {village.village_name || village.name || "Unknown Village"}</strong>
+                              </div>
+                              <div className="text-end">
+                                <div className="text-warning">⭐ {feedback.rating || 0}</div>
+                                <small className="text-muted">"{feedback.message || "No feedback"}"</small>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
-                    <div className="alert alert-info">No village data available</div>
+                    <div className="alert alert-info">No feedback data available</div>
                   )}
                 </div>
               </div>
@@ -393,51 +489,67 @@ const TrustProfile = () => {
 
             {/* Projects Section */}
             <div className="col-md-7">
-              <div className="row">
-                <div className="col-md-4">
+              <div className="row g-3">
+                <div className="col-md-6">
                   <div 
-                    className="card past-projects h-100" 
+                    className="card h-100 shadow-sm clickable-card" 
                     onClick={() => handleProjectClick('past')}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', borderLeft: '4px solid #dc3545' }}
                   >
-                    <div className="card-body">
+                    <div className="card-body text-center">
                       <h5 className="card-title text-danger">
                         <i className="bi bi-check-circle me-2"></i>
-                        Past Projects
+                        Past Support
                       </h5>
-                      <p className="project-count text-center text-danger">{projectCounts.past}</p>
+                      <p className="project-count display-4 text-danger">{projectCounts.past}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <div 
-                    className="card ongoing-projects h-100" 
+                    className="card h-100 shadow-sm clickable-card" 
                     onClick={() => handleProjectClick('ongoing')}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', borderLeft: '4px solid #28a745' }}
                   >
-                    <div className="card-body">
+                    <div className="card-body text-center">
                       <h5 className="card-title text-success">
                         <i className="bi bi-arrow-repeat me-2"></i>
-                        Ongoing Projects
+                        Ongoing Support
                       </h5>
-                      <p className="project-count text-center text-success">{projectCounts.ongoing}</p>
+                      <p className="project-count display-4 text-success">{projectCounts.ongoing}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <div 
-                    className="card future-projects h-100" 
+                    className="card h-100 shadow-sm clickable-card" 
                     onClick={() => handleProjectClick('upcoming')}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', borderLeft: '4px solid #007bff' }}
                   >
-                    <div className="card-body">
+                    <div className="card-body text-center">
                       <h5 className="card-title text-primary">
                         <i className="bi bi-calendar-plus me-2"></i>
-                        Future Projects
+                        Future Support
                       </h5>
-                      <p className="project-count text-center text-primary">{projectCounts.upcoming}</p>
+                      <p className="project-count display-4 text-primary">{projectCounts.upcoming}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div 
+                    className="card h-100 shadow-sm clickable-card" 
+                    onClick={() => handleProjectClick('pending')}
+                    style={{ cursor: 'pointer', borderLeft: '4px solid #ffc107' }}
+                  >
+                    <div className="card-body text-center">
+                      <h5 className="card-title text-warning">
+                        <i className="bi bi-hourglass-split me-2"></i>
+                        Pending Support
+                      </h5>
+                      <p className="project-count display-4 text-warning">{projectCounts.pending}</p>
                     </div>
                   </div>
                 </div>
@@ -449,8 +561,8 @@ const TrustProfile = () => {
 
       {/* Project Modal */}
       {showModal && (
-        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
-          <div className="modal-dialog">
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">{modalTitle}</h5>
@@ -462,53 +574,46 @@ const TrustProfile = () => {
               </div>
               <div className="modal-body">
                 {modalProjects.length > 0 ? (
-                  <ul className="list-group">
-                    {modalProjects.map((project, index) => (
-                      <li key={index} className="list-group-item">
-                        <h6>{project.title || "Untitled Project"}</h6>
-                        <p>{project.description || "No description available"}</p>
-                        
-                        {modalTitle.includes("Past") && project.completionDate && (
-                          <p className="mb-1">
-                            <small className="text-muted">
-                              <strong>Completed:</strong> {new Date(project.completionDate).toLocaleDateString()}
-                            </small>
-                          </p>
-                        )}
-                        
-                        {modalTitle.includes("Ongoing") && (
-                          <>
-                            {project.startDate && (
-                              <p className="mb-1">
-                                <small className="text-muted">
-                                  <strong>Started:</strong> {new Date(project.startDate).toLocaleDateString()}
-                                </small>
-                              </p>
-                            )}
-                            {project.progressUpdates?.length > 0 && (
-                              <p className="mb-1">
-                                <small className="text-muted">
-                                  <strong>Last update:</strong> {new Date(
-                                    project.progressUpdates[project.progressUpdates.length - 1].date
-                                  ).toLocaleDateString()}
-                                </small>
-                              </p>
-                            )}
-                          </>
-                        )}
-                        
-                        {modalTitle.includes("Upcoming") && project.plannedStartDate && (
-                          <p className="mb-1">
-                            <small className="text-muted">
-                              <strong>Planned start:</strong> {new Date(project.plannedStartDate).toLocaleDateString()}
-                            </small>
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Village</th>
+                          <th>Problem</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                          <th>Posted</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {modalProjects.map((project, index) => {
+                          const village = getVillageDetails(project.village_id);
+                          return (
+                            <tr key={index}>
+                              <td>{village.village_name || village.name || "Unknown Village"}</td>
+                              <td>{project.problem_id || "N/A"}</td>
+                              <td>₹{project.money_trust?.toLocaleString() || 0}</td>
+                              <td>
+                                <span className={`badge ${
+                                  project.status === 'past' ? 'bg-success' :
+                                  project.status === 'ongoing' ? 'bg-warning' :
+                                  project.status === 'upcoming' ? 'bg-primary' :
+                                  'bg-secondary'
+                                }`}>
+                                  {project.status}
+                                </span>
+                              </td>
+                              <td>
+                                {project.posted_time ? new Date(project.posted_time).toLocaleString() : "N/A"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
-                  <p>No projects found in this category</p>
+                  <div className="alert alert-info">No projects found in this category</div>
                 )}
               </div>
               <div className="modal-footer">

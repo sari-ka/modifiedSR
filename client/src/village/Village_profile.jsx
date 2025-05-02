@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { villageContext } from "../Context/LoginV_Context";
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 const VillageProfile = () => {
   const { currentVillage } = useContext(villageContext);
   const [villageDetails, setVillageDetails] = useState(null);
@@ -20,15 +21,38 @@ const VillageProfile = () => {
     past: 0,
     all: 0
   });
+  const [acceptedProblems, setAcceptedProblems] = useState([]);
 
   const MAPS_API_KEY = "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678"; // Replace with your actual key
 
   const villageId = currentVillage || localStorage.getItem("villageId");
 
-  const handleProjectClick = (projectType) => {
+  const handleProjectClick = async (projectType) => {
     setModalTitle(`${projectType.charAt(0).toUpperCase() + projectType.slice(1)} Projects`);
-    setModalProjects(villageDetails?.problems.filter(p => p.status === projectType) || []);
-    setShowModal(true);
+    
+    try {
+      setLoading(true);
+      
+      if (projectType === 'accepted') {
+        // Special API call for accepted projects with trust info
+        const res = await axios.get(
+          `http://localhost:9125/village-api/village/${villageDetails.name}/problems/accepted-with-village`
+        );
+        setModalProjects(res.data.payload || []);
+      } else {
+        // Regular filtering for other project types
+        setModalProjects(villageDetails?.problems.filter(p => p.status === projectType) || []);
+      }
+      
+      setShowModal(true);
+    } catch (err) {
+      setError(err.message);
+      // Fallback to regular projects if API fails
+      setModalProjects(villageDetails?.problems.filter(p => p.status === projectType) || []);
+      setShowModal(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getVillage = async () => {
@@ -350,70 +374,85 @@ const VillageProfile = () => {
 
       {/* Modal for Projects */}
       {showModal && (
-        <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header" style={{ backgroundColor: '#3498db', color: 'white' }}>
-                <h5 className="modal-title">{modalTitle}</h5>
-                <button 
-                  type="button" 
-                  className="btn-close btn-close-white" 
-                  onClick={() => setShowModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                {modalProjects.length > 0 ? (
-                  <div className="list-group">
-                    {modalProjects.map((project, index) => (
-                      <div 
-                        key={index} 
-                        className="list-group-item border-0 mb-2 shadow-sm"
-                        style={{ borderRadius: '5px' }}
-                      >
-                        <h5 style={{ color: '#2c3e50' }}>{project.title}</h5>
-                        <p style={{ color: '#7f8c8d' }}>{project.description}</p>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span style={{ color: '#3498db', fontWeight: '500' }}>
-                            Estimated: ₹{project.estimatedamt}
-                          </span>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: 
-                                project.status === 'ongoing' ? '#3498db' : 
-                                project.status === 'pending' ? '#f39c12' : '#95a5a6',
-                              color: 'white'
-                            }}
-                          >
-                            {project.status}
-                          </span>
-                        </div>
-                        {project.posted_time && (
-                          <small className="text-muted d-block mt-2">
-                            Posted: {new Date(project.posted_time).toLocaleString()}
-                          </small>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted">No projects found in this category</p>
-                )}
-              </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn" 
-                  onClick={() => setShowModal(false)}
-                  style={{ backgroundColor: '#95a5a6', color: 'white' }}
-                >
-                  Close
-                </button>
+  <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal-dialog modal-lg">
+      <div className="modal-content border-0 shadow-lg">
+        <div className="modal-header" style={{ backgroundColor: '#3498db', color: 'white' }}>
+          <h5 className="modal-title">{modalTitle}</h5>
+          <button 
+            type="button" 
+            className="btn-close btn-close-white" 
+            onClick={() => setShowModal(false)}
+          ></button>
+        </div>
+        <div className="modal-body">
+          {loading ? (
+            <div className="text-center py-4">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
             </div>
-          </div>
+          ) : modalProjects.length > 0 ? (
+            <div className="list-group">
+              {modalProjects.map((project, index) => (
+                <div 
+                  key={index} 
+                  className="list-group-item border-0 mb-2 shadow-sm"
+                  style={{ borderRadius: '5px' }}
+                >
+                  <h5 style={{ color: '#2c3e50' }}>{project.title}</h5>
+                  <p style={{ color: '#7f8c8d' }}>{project.description}</p>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span style={{ color: '#3498db', fontWeight: '500' }}>
+                      Estimated: ₹{project.estimatedamt}
+                    </span>
+                    <span 
+                      className="badge" 
+                      style={{ 
+                        backgroundColor: 
+                          project.status === 'ongoing' ? '#3498db' : 
+                          project.status === 'pending' ? '#f39c12' : '#95a5a6',
+                        color: 'white'
+                      }}
+                    >
+                      {project.status}
+                    </span>
+                  </div>
+                  {/* Fixed trust name display */}
+                  {project.accepted_trust && (
+                    <div className="mt-2">
+                      <span className="text-muted">Accepted by: </span>
+                      <span className="fw-bold" style={{ color: '#2ecc71' }}>
+                        {project.trust_name || 'Unknown Trust'}
+                      </span>
+                    </div>
+                  )}
+                  {project.posted_time && (
+                    <small className="text-muted d-block mt-2">
+                      Posted: {new Date(project.posted_time).toLocaleString()}
+                    </small>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted">No projects found in this category</p>
+          )}
         </div>
-      )}
+        <div className="modal-footer">
+          <button 
+            type="button" 
+            className="btn" 
+            onClick={() => setShowModal(false)}
+            style={{ backgroundColor: '#95a5a6', color: 'white' }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
