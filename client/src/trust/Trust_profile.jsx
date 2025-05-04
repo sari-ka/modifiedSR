@@ -23,6 +23,8 @@ const TrustProfile = () => {
   const [villagesLoading, setVillagesLoading] = useState(false);
   const [villagesError, setVillagesError] = useState(null);
   const [villages, setVillages] = useState([]);
+  const [problemTitles, setProblemTitles] = useState({});
+
   const MAPS_API_KEY = "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678";
 
   const projectCounts = {
@@ -32,6 +34,47 @@ const TrustProfile = () => {
     pending: projects.pending.length
   };
 
+  const fetchProblemTitle = async (problemId) => {
+    if (!problemId || problemTitles[problemId]) return;
+  
+    console.log('Fetching title for problemId:', problemId);
+  
+    try {
+      const res = await fetch(`/problem-title/${problemId}`);
+      const data = await res.json();
+  
+      console.log('Response for', problemId, ':', data);
+  
+      if (res.ok && data.title) {
+        setProblemTitles(prev => ({
+          ...prev,
+          [problemId]: data.title
+        }));
+      } else {
+        setProblemTitles(prev => ({
+          ...prev,
+          [problemId]: 'Unknown Problem'
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching problem title:', err);
+      setProblemTitles(prev => ({
+        ...prev,
+        [problemId]: 'Error'
+      }));
+    }
+  };
+  
+  useEffect(() => {
+    if (!showModal || modalProjects.length === 0) return;
+  
+    modalProjects.forEach(project => {
+      if (project.problem_id) {
+        fetchProblemTitle(project.problem_id);
+      }
+    });
+  }, [showModal, modalProjects]);
+  
   const handleProjectClick = (projectType) => {
     const titleMap = {
       past: "Past Village Support",
@@ -546,8 +589,6 @@ const TrustProfile = () => {
                           <th>Village</th>
                           <th>Problem</th>
                           <th>Amount</th>
-                          <th>Status</th>
-                          <th>Posted</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -556,7 +597,7 @@ const TrustProfile = () => {
                           return (
                             <tr key={index}>
                               <td>{village.village_name || village.name || "Unknown Village"}</td>
-                              <td>{project.problem_id || "N/A"}</td>
+                              <td>{problemTitles[project.problem_id] || 'Loading...'}</td>
                               <td>₹{project.money_trust?.toLocaleString() || 0}</td>
                               <td>
                                 <span className={`badge ${
@@ -567,9 +608,6 @@ const TrustProfile = () => {
                                 }`}>
                                   {project.status}
                                 </span>
-                              </td>
-                              <td>
-                                {project.posted_time ? new Date(project.posted_time).toLocaleString() : "N/A"}
                               </td>
                             </tr>
                           );

@@ -7,7 +7,6 @@ const VillageProfile = () => {
   const { currentVillage } = useContext(villageContext);
   const [villageDetails, setVillageDetails] = useState(null);
   const [topTrusts, setTopTrusts] = useState([]);
-  const [topIndividuals, setTopIndividuals] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -92,28 +91,25 @@ const VillageProfile = () => {
     }
   };
 
-  const fetchTopContributors = async () => {
+  const fetchTopTrusts = async () => {
     if (!villageId) return;
-
+  
     try {
-      const res = await axios.get(`http://localhost:9125/village-api/village/${villageId}/top-contributors`);
-      const contributors = res.data.payload || [];
-
-      const trusts = contributors.filter(c => c.type === 'trust');
-      const individuals = contributors.filter(c => c.type === 'individual');
+      const villageRes = await axios.get(`http://localhost:9125/village-api/village/${villageId}`);
+      const villageDetails = villageRes.data.payload;
+      const vid = villageDetails._id;
+      const res = await axios.get(`http://localhost:9125/village-api/village/${vid}/top-trust`);
+      const trusts = res.data.payload || [];
 
       setTopTrusts(trusts);
-      setTopIndividuals(individuals);
-
+      console.log(trusts)
       localStorage.setItem("topTrusts", JSON.stringify(trusts));
-      localStorage.setItem("topIndividuals", JSON.stringify(individuals));
     } catch (err) {
       const cacheTrusts = localStorage.getItem("topTrusts");
-      const cacheIndividuals = localStorage.getItem("topIndividuals");
       if (cacheTrusts) setTopTrusts(JSON.parse(cacheTrusts));
-      if (cacheIndividuals) setTopIndividuals(JSON.parse(cacheIndividuals));
     }
   };
+  
 
   const getVillageImage = async () => {
     if (!villageDetails) return;
@@ -164,19 +160,23 @@ const VillageProfile = () => {
   useEffect(() => {
     const cached = localStorage.getItem("villageData");
     const cachedTrusts = localStorage.getItem("topTrusts");
-    const cachedIndividuals = localStorage.getItem("topIndividuals");
     const cachedMap = localStorage.getItem("villageMap");
 
     if (cached) setVillageDetails(JSON.parse(cached));
     if (cachedTrusts) setTopTrusts(JSON.parse(cachedTrusts));
-    if (cachedIndividuals) setTopIndividuals(JSON.parse(cachedIndividuals));
     if (cachedMap) setImageUrl(cachedMap);
 
     if (villageId) {
       getVillage();
-      fetchTopContributors();
+      fetchTopTrusts();
     }
   }, [villageId]);
+
+  useEffect(() => {
+    if (villageDetails) {
+      getVillageImage();
+    }
+  }, [villageDetails]);
 
   useEffect(() => {
     if (villageDetails) {
@@ -229,66 +229,24 @@ const VillageProfile = () => {
               </div>
             </div>
           </div>
-
-          {/* Top Trusts Card */}
+          {/* top-trust */}
           <div className="card mb-4 border-0 shadow-sm">
             <div className="card-body" style={{ backgroundColor: '#f8f9fa', borderRadius: '10px' }}>
               <h4 className="card-title mb-3" style={{ color: '#3498db', borderBottom: '2px solid #3498db', paddingBottom: '8px' }}>
-                Top Trusts
+                Top Trust Contributors
               </h4>
-              {topTrusts.length > 0 ? (
-                <div className="list-group">
-                  {topTrusts.map(trust => (
-                    <div 
-                      key={trust._id || trust.rank} 
-                      className="list-group-item py-2 border-0 mb-1" 
-                      style={{ backgroundColor: 'white', borderRadius: '5px' }}
-                    >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="small" style={{ color: '#2c3e50' }}>
-                          {trust.rank}. {trust.trust_name}
-                        </span>
-                        <span className="badge" style={{ backgroundColor: '#2ecc71', color: 'white' }}>
-                          ₹{trust.total_money}
-                        </span>
-                      </div>
+              <ul className="list-unstyled">
+                {topTrusts.map((trust, index) => (
+                  <li key={index} className="mb-2">
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: '#2c3e50' }}>
+                      {trust.rank}. {trust.trust_name}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="small text-muted mb-0">No trust contributions found</p>
-              )}
-            </div>
-          </div>
-
-          {/* Top Individuals Card */}
-          <div className="card mb-4 border-0 shadow-sm">
-            <div className="card-body" style={{ backgroundColor: '#f8f9fa', borderRadius: '10px' }}>
-              <h4 className="card-title mb-3" style={{ color: '#3498db', borderBottom: '2px solid #3498db', paddingBottom: '8px' }}>
-                Top Individuals
-              </h4>
-              {topIndividuals.length > 0 ? (
-                <div className="list-group">
-                  {topIndividuals.map(individual => (
-                    <div 
-                      key={individual._id || individual.rank} 
-                      className="list-group-item py-2 border-0 mb-1" 
-                      style={{ backgroundColor: 'white', borderRadius: '5px' }}
-                    >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="small" style={{ color: '#2c3e50' }}>
-                          {individual.rank}. {individual.user_name}
-                        </span>
-                        <span className="badge" style={{ backgroundColor: '#2ecc71', color: 'white' }}>
-                          ₹{individual.total_money}
-                        </span>
-                      </div>
+                    <div className="text-muted" style={{ fontSize: '14px' }}>
+                      Total Contribution: ₹{trust.total_money.toLocaleString()}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="small text-muted mb-0">No individual contributions found</p>
-              )}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
