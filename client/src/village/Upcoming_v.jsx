@@ -63,7 +63,7 @@ function Upcoming_v() {
                     <h6 className="text-success fw-bold">₹{problem.estimatedamt}</h6>
                   </div>
 
-                  <button className="btn btn-primary w-25 mt-auto" onClick={() => handleStartProblem(problem._id)}>Started</button>
+                  <button className="btn btn-primary w-25 mt-auto p-2" onClick={() => handleStartProblem(problem._id)}>Started</button>
                   {
                     problem.done_by_trust === "started" && problem.done_by_village === "accepted" && <p className="started">Trust said started</p>
                   }

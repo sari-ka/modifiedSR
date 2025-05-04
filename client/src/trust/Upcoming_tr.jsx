@@ -121,7 +121,7 @@ function Upcoming_tr() {
                                     </div>
 
                                     <button
-                                        className="btn btn-primary w-25 mt-auto"
+                                        className="btn btn-primary w-25 mt-auto p-2"
                                         onClick={() => handleStartProblem(problem._id)} // Only pass problem._id here
                                     >
                                         Start

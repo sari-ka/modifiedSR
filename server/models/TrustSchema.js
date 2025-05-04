@@ -76,5 +76,7 @@ const TrustSchema = new mongoose.Schema({
   rating: { type: Number, default: 0 }, 
 });
 
+
+
 const Trust = mongoose.model("Trust", TrustSchema);
 module.exports = Trust;

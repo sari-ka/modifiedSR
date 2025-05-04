@@ -119,14 +119,14 @@ const handleCompleteProblem = async (problemId) => {
                                     </div>
 
                                     <button
-                                        className="btn btn-primary w-25 mt-auto"
+                                        className="btn btn-primary w-25 mt-auto p-2"
                                         onClick={() => handleCompleteProblem(problem._id)} // Only pass problem._id here
                                     >
-                                        Start
+                                        Done
                                     </button>
 
                                     {problem.done_by_trust === "accepted" && problem.done_by_village === "started" &&
-                                    <p className="started">Trust said done</p>}
+                                    <p className="started">Village said done</p>}
                                 </div>
                             </div>
                         </div>

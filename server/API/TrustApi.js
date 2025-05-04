@@ -43,27 +43,40 @@ trustApp.put('/trust', eah(async (req, res) => {
 
 // ✅ Update a problem's status by trust as started
 trustApp.put('/trust/:villageId/:problemId/start', eah(async (req, res) => {
-    const { villageId, problemId } = req.params;
-  
-    const village = await Village.findById(villageId);
-    if (!village) return res.status(404).send({ message: "Village not found" });
-  
-    const problem = village.problems.id(problemId);
-    if (!problem) return res.status(404).send({ message: "Problem not found" });
-  
-    problem.done_by_trust = "started";
-  
-    // Optional: auto-move to 'past' if village also completed
-    if (problem.done_by_village==="started") {
-      problem.status = 'ongoing';
-      const res = await Trust.findOneAndUpdate(
-        { "assigned_problems.problem_id": problemId },
-        { $set: { "assigned_problems.$.status": "ongoing" } }
-      );
-    }
-    await village.save();
-    res.send({ message: "Trust status updated", payload: problem });
-  }));
+  const { villageId, problemId } = req.params;
+
+  const village = await Village.findById(villageId);
+  if (!village) return res.status(404).send({ message: "Village not found" });
+
+  const problem = village.problems.id(problemId);
+  if (!problem) return res.status(404).send({ message: "Problem not found" });
+
+  problem.done_by_trust = "started";
+
+  // Also update Trust schema money_trust
+  const trustUpdateResult = await Trust.findOneAndUpdate(
+    { "assigned_problems.problem_id": problemId },
+    { $set: { "assigned_problems.$.money_trust": problem.estimatedamt } },  // 💥 using problem's estimatedamt
+    { new: true }
+  );
+
+  if (problem.done_by_village === "started") {
+    problem.status = 'ongoing';
+    await Trust.findOneAndUpdate(
+      { "assigned_problems.problem_id": problemId },
+      { $set: { "assigned_problems.$.status": "ongoing" } }
+    );
+  }
+
+  await village.save();
+
+  res.send({
+    message: "Trust status and money_trust updated",
+    updatedTrust: trustUpdateResult,
+    payload: problem
+  });
+}));
+
 // ✅ Update a problem's status by trust as done
 trustApp.put('/trust/:villageId/:problemId/done', eah(async (req, res) => {
   const { villageId, problemId } = req.params;
@@ -225,5 +238,122 @@ trustApp.get("/:trustName/ongoing", async (req, res) => {
     res.status(500).json({ message: error });
   }
 });
+
+// Route to get all trusts with total money spent on assigned problems
+trustApp.get('/trust/:trustName/total-spent', async (req, res) => {
+  const trustName = req.params.trustName;  // Fetch trust name from request parameters
+  
+  try {
+    // Find the trust by its name
+    const trust = await Trust.findOne({ name: trustName });
+    
+    if (!trust) {
+      return res.status(404).json({ message: `Trust with name ${trustName} not found` });
+    }
+    
+    // Calculate total money spent from assigned problems
+    const totalSpent = trust.assigned_problems.reduce((sum, problem) => {
+      return sum + problem.money_trust; // Sum the money_trust values
+    }, 0);
+    
+    // Prepare the response with the total spent
+    res.status(200).json({
+      message: 'success',
+      trustName: trust.name,
+      totalSpent: totalSpent,  // Send the total money spent for this trust
+    });
+  } catch (err) {
+    console.error('Error fetching trust data:', err);
+    res.status(500).json({
+      message: 'Error fetching trust data',
+    });
+  }
+});
+
+trustApp.get('/trust/:username/top-villages', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const trust = await Trust.findOne({ name:username });
+    if (!trust) return res.status(404).json({ error: 'Trust not found' });
+
+    const villageMap = {};
+
+    trust.assigned_problems.forEach(problem => {
+      const villageId = problem.village_id?.toString();
+      if (!villageId) return;
+
+      villageMap[villageId] = (villageMap[villageId] || 0) + (problem.money_trust || 0);
+    });
+
+    const topVillageData = Object.entries(villageMap)
+      .map(([villageId, totalMoney]) => ({ villageId, totalMoney }))
+      .sort((a, b) => b.totalMoney - a.totalMoney)
+      .slice(0, 3);
+
+    const villageIds = topVillageData.map(v => v.villageId);
+    const villages = await Village.find({ _id: { $in: villageIds } });
+
+    const villageNameMap = {};
+    villages.forEach(v => {
+      villageNameMap[v._id.toString()] = v.name;
+    });
+
+    const result = topVillageData.map(v => ({
+      villageId: v.villageId,
+      villageName: villageNameMap[v.villageId] || 'Unknown',
+      totalMoney: v.totalMoney,
+    }));
+
+    res.json({ topVillages: result });
+  } catch (err) {
+    console.error("Error in top-villages route:", err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+trustApp.get('/trust/village/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const village = await Village.findById(id);
+    if (!village) return res.status(404).json({ error: 'Village not found' });
+
+    res.json({ villageId: village._id, villageName: village.name });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// get problem title with problem id
+trustApp.get('/problem-title/:problemId', async (req, res) => {
+  const { problemId } = req.params;
+
+  try {
+    // Find the village document that contains this problem
+    const village = await Village.findOne(
+      { 'problems._id': problemId },
+      { 'problems.$': 1 } // return only the matching problem in problems array
+    );
+
+    if (!village || !village.problems || village.problems.length === 0) {
+      return res.status(404).json({ message: 'Problem not found' });
+    }
+
+    const problem = village.problems[0]; // since we used $ operator, only 1 problem will be returned
+
+    res.json({
+      problemId: problem._id,
+      title: problem.title,
+      description: problem.description, // optional: send other fields if needed
+      status: problem.status
+    });
+  } catch (err) {
+    console.error('Error fetching problem title:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+})
 
 module.exports = trustApp;

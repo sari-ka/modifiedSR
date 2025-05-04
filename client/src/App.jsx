@@ -25,6 +25,7 @@ import Upcoming_v from './village/Upcoming_v'
 import Upcoming_tr from './trust/Upcoming_tr'
 import Ongoing_tr from './trust/Ongoing_tr'
 import Ongoing_v from './village/Ongoing_v'
+import 'bootstrap/dist/css/bootstrap.min.css';
 function App() {
 
   let b = createBrowserRouter([

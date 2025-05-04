@@ -247,10 +247,10 @@ villageApp.get('/:villageName/problems/accepted', async (req, res) => {
       await village.save();
       res.send({ message: "Trust status updated", payload: problem });
     }));
-
     // update as done
     villageApp.put('/village/:villageId/:problemId/done', eah(async (req, res) => {
       const { villageId, problemId } = req.params;
+      const { rating, message } = req.body;
     
       const village = await Village.findById(villageId);
       if (!village) return res.status(404).send({ message: "Village not found" });
@@ -260,50 +260,58 @@ villageApp.get('/:villageName/problems/accepted', async (req, res) => {
     
       problem.done_by_village = "done";
     
-      // Optional: auto-move to 'past' if village also completed
-      if (problem.done_by_trust==="done") {
+      const trustDoc = await Trust.findById(problem.accepted_trust);
+      if (trustDoc) {
+        trustDoc.feedback.push({ village_id: villageId, rating, message });
+        trustDoc.rating = Number(
+          (trustDoc.feedback.reduce((sum, f) => sum + f.rating, 0) / trustDoc.feedback.length).toFixed(1)
+        );
+        await trustDoc.save();
+    
+        const trustInVillage = village.trusts.find(t => t.trust_name === trustDoc.name);
+        if (trustInVillage) {
+          trustInVillage.total_money = (trustInVillage.total_money || 0) + (problem.estimatedamt || 0);
+        } else {
+          village.trusts.push({ trust_name: trustDoc.name, total_money: problem.estimatedamt || 0 });
+        }
+      }
+    
+      if (problem.done_by_trust === "done") {
         problem.status = 'past';
-        const res = await Trust.findOneAndUpdate(
+        await Trust.findOneAndUpdate(
           { "assigned_problems.problem_id": problemId },
           { $set: { "assigned_problems.$.status": "past" } }
         );
       }
+    
       await village.save();
       res.send({ message: "Trust status updated", payload: problem });
     }));
- 
+       
 // Get top contributors
-villageApp.get('/village/:id/top-contributors', eah(async (req, res) => {
-    const villageId = req.params.id
-    const village = await Village.findById(villageId).lean()
+villageApp.get('/village/:id/top-trust', eah(async (req, res) => {
+  const villageId = req.params.id
+  const village = await Village.findById(villageId).lean()
 
-    if (!village) {
-        return res.status(404).send({ message: "Village not found" })
-    }
+  if (!village) {
+      return res.status(404).send({ message: "Village not found" })
+  }
 
-    const topTrusts = village.trusts
-        .sort((a, b) => b.total_money - a.total_money)
-        .slice(0, 3)
-        .map((trust, index) => ({
-            ...trust,
-            rank: index + 1,
-            type: 'trust'
-        }))
+  const topTrusts = village.trusts
+      .sort((a, b) => b.total_money - a.total_money)
+      .slice(0, 3)
+      .map((trust, index) => ({
+          ...trust,
+          rank: index + 1,
+          type: 'trust'
+      }))
 
-    const topIndividuals = village.user
-        .sort((a, b) => (b.total_money || 0) - (a.total_money || 0))
-        .slice(0, 3)
-        .map((user, index) => ({
-            ...user,
-            rank: index + 1,
-            type: 'individual'
-        }))
-
-    res.status(200).send({ 
-        message: "Top contributors", 
-        payload: [...topTrusts, ...topIndividuals].sort((a, b) => a.rank - b.rank)
-    })
+  res.status(200).send({ 
+      message: "Top trust contributors", 
+      payload: topTrusts
+  })
 }))
+
 
 // Delete problem
 villageApp.delete('/village/:villageId/problem/:problemId', eah(async (req, res) => {
