@@ -51,6 +51,19 @@ function Home() {
           </Link>
           <p className="display-6 mt-3">Individual</p>
         </div>
+        {/* Individual */}
+        <div className="text-center">
+          <Link to="/admin">
+            <button className="btn">
+              <img
+                src={ind}
+                className="rounded-circle img-fluid option-img"
+                alt="Individual"
+              />
+            </button>
+          </Link>
+          <p className="display-6 mt-3">Admin</p>
+        </div>
       </div>
     </div>
   );

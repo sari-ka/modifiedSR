@@ -17,6 +17,7 @@ function Login_tr() {
     <div className='min-vh-100 d-flex align-items-center justify-content-center' style={{ backgroundColor: "#E8F5E9" }}>
       <form className='col-6 col-md-5 col-lg-3 d-block mx-auto border border-light-subtle p-4 rounded-4 bg-white' onSubmit={handleSubmit(handleTrustVerify)}>
         <h2 className='text-center mb-4'></h2>
+        {error?.length!==0 && <p className="text-danger">{error}</p> }
         <p className='lead text-center fw-bold'>Welcome!</p>
         <p className='text-center lead fs-6'>Log in Support Roots to continue </p>
 

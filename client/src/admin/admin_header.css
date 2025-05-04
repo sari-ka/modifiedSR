@@ -1,0 +1,98 @@
+/* Layout */
+.layout-wrapper {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  /* Topbar */
+  .topbar {
+    background-color: #ffffff;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    height: 60px;
+    width: 100%;
+    position: fixed;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .topbar .logo {
+    font-size: 22px;
+    font-weight: 600;
+    color: #007bff;
+  }
+  
+  .open-btn,
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #007bff;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    background-color: #f9f9f9;
+    border-right: 1px solid #e0e0e0;
+    position: fixed;
+    height: 100%;
+    top: 60px;
+    left: -240px;
+    transition: left 0.3s ease;
+    z-index: 999;
+    padding-top: 1rem;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .sidebar-header {
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .nav-link {
+    display: block;
+    padding: 12px 20px;
+    color: #333;
+    text-decoration: none;
+  }
+  
+  .nav-link:hover {
+    background-color: #e6f0ff;
+    color: #007bff;
+    border-left: 4px solid #007bff;
+  }
+  
+  .btn-danger {
+    background-color: #dc3545;
+    border: none;
+  }
+  
+  .btn-danger:hover {
+    background-color: #c82333;
+  }
+  
+  /* Main Content */
+  .main-content {
+    flex-grow: 1;
+    margin-left: 0;
+    margin-top: 60px;
+    padding: 1.5rem;
+    overflow-y: auto;
+    width: 100%;
+    transition: margin-left 0.3s ease;
+  }
+  
+  .sidebar-open .main-content {
+    margin-left: 240px;
+  }
+  

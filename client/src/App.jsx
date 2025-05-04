@@ -27,6 +27,13 @@ import Ongoing_tr from './trust/Ongoing_tr'
 import Ongoing_v from './village/Ongoing_v'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Past_tr from './trust/Past_tr'
+import RootAdmin from './admin/RootAdmin'
+import LoginAdmin from './admin/LoginAdmin'
+import Unver_v from './admin/unver_v'
+import Unver_tr from './admin/unver_tr'
+import Verified_v from './admin/verified_v'
+import Verified_tr from './admin/verified_tr'
+import AdminHeader from './admin/AdminHeader'
 function App() {
 
   let b = createBrowserRouter([
@@ -170,6 +177,42 @@ function App() {
             {
               path:'trusts',
               element:<Trusts/>
+            }         
+          ]
+          }
+          ]
+        },
+        {
+          path:'admin',
+          element: <RootAdmin/>,
+          children:[
+            {
+              path: "",
+              element: <Navigate to="login" replace />, 
+            },
+            {
+              path:'login',
+              element:<LoginAdmin/>
+            },
+            {
+              path:'',
+              element:<AdminHeader/>,
+              children:[
+            {
+              path:'unverified-villages',
+              element:<Unver_v/>
+            },
+            {
+              path:'unverified-trusts',
+              element:<Unver_tr/>
+            },
+            {
+              path: 'verified-villages',
+              element:<Verified_v/>
+            },
+            {
+              path: 'verified-trusts',
+              element:<Verified_tr/>
             }         
           ]
           }

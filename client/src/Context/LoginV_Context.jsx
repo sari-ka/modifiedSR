@@ -11,6 +11,10 @@ function LoginV_Context({children}) {
         if (res.data.payload) {
             let VillageDetails = res.data.payload;
             console.log(res.data)
+            if (!VillageDetails.approved) {
+              setError("Village not approved by admin yet.");
+              return;
+            }
             if (VillageDetails?.password !== password) {
                 setError("Invalid Password");
             } else {

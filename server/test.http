@@ -1,6 +1,4 @@
 #village-req
-
-
 ###
 get http://localhost:9125/village-api/Tangeda/problems/accepted-with-village
 
@@ -346,3 +344,14 @@ Content-Type: application/json
   ],
   "rating": 4.5
 }
+
+# Admin req
+
+###
+GET  http://localhost:9125/admin-api/admin/harshitha@gmail.com
+
+###
+GET http://localhost:9125/admin-api/admins/verified-villages
+
+###
+GET http://localhost:9125/admin-api/admins/unverified-villages
