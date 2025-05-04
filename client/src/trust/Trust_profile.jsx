@@ -8,7 +8,7 @@ const TrustProfile = () => {
   const [trustDetails, setTrustDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("https://media.istockphoto.com/id/1316331605/vector/modern-city-building-exterior-office-center-or-business-house.jpg?s=612x612&w=0&k=20&c=VTJvkEXvS1xS53IxM6p7aJYj2RCZqeYVA57i5WfXkI8=");
   const [mapLoading, setMapLoading] = useState(false);
   const [projects, setProjects] = useState({
     past: [],
@@ -150,67 +150,33 @@ const TrustProfile = () => {
       setTopVillages([]);
       return;
     }
-
+  
     try {
       setVillagesLoading(true);
       setVillagesError(null);
-      
-      // First try to get villages from feedback
-      if (trustDetails?.feedback?.length > 0) {
-        const villageIds = trustDetails.feedback.map(f => f.village_id);
-        const uniqueVillageIds = [...new Set(villageIds)];
-        
-        // Fetch village details for these IDs
-        const villagesData = await Promise.all(
-          uniqueVillageIds.map(async id => {
-            try {
-              const res = await axios.get(`http://localhost:9125/village-api/village/${id}`);
-              return res.data.payload;
-            } catch (err) {
-              console.error(`Error fetching village ${id}:`, err);
-              return null;
-            }
-          })
-        );
-        
-        // Filter out nulls and map to required format
-        const validVillages = villagesData.filter(v => v).map(village => ({
-          id: village._id,
-          name: village.village_name || "Unknown Village",
-          rating: trustDetails.feedback.find(f => f.village_id === village._id)?.rating || 0,
-          message: trustDetails.feedback.find(f => f.village_id === village._id)?.message || "No feedback"
-        }));
-        
-        // Sort by rating and take top 3
-        const sortedVillages = [...validVillages].sort((a, b) => b.rating - a.rating);
-        setTopVillages(sortedVillages.slice(0, 3));
-        localStorage.setItem("topVillages", JSON.stringify(sortedVillages.slice(0, 3)));
-        return;
-      }
-      
-      // Fallback to villages API if no feedback
+  
+      // Call the backend route for top villages by money
       const response = await axios.get(
-        `http://localhost:9125/trust-api/trust/${trustname}`
+        `http://localhost:9125/trust-api/trust/${trustname}/top-villages`
       );
-
-      const villagesData = response.data.payload || [];
-      
-      // Sort by total help provided and take top 3
-      const sortedVillages = [...villagesData].sort((a, b) => (b.total_help || 0) - (a.total_help || 0));
-      const top3 = sortedVillages.slice(0, 3).map((village, index) => ({
-        id: village._id || index,
-        name: village.village_name || "Anonymous Village",
-        helpAmount: village.total_help || 0,
+      // console.log(response)
+      const data = response.data.topVillages || [];
+      // console.log(data)
+      // Map and structure the data for UI
+      const top3 = data.slice(0, 3).map((village, index) => ({
+        id: village.villageId,
+        name: village.villageName || "Anonymous Village",
+        helpAmount: village.totalMoney || 0,
         rank: index + 1,
-        projects: village.projects_count || 0
       }));
-
+  
       setTopVillages(top3);
+      console.log("top3 : "+top3)
       localStorage.setItem("topVillages", JSON.stringify(top3));
     } catch (err) {
-      console.error("Error fetching villages:", err);
+      console.error("Error fetching top villages:", err);
       setVillagesError("Failed to load top villages");
-      // Load from cache if available
+  
       const cachedVillages = localStorage.getItem("topVillages");
       if (cachedVillages) {
         setTopVillages(JSON.parse(cachedVillages));
@@ -291,11 +257,12 @@ const TrustProfile = () => {
 
   // Fetch villages and map when trust details change
   useEffect(() => {
-    if (trustDetails) {
+    if (trustname) {
       fetchTopVillages();
+      console.log("topVillages : "+topVillages)
       getTrustImage();
     }
-  }, [trustDetails]);
+  }, [trustname]);
 
   // Loading and error states
   if (!trustname) {
@@ -460,33 +427,31 @@ const TrustProfile = () => {
                     </div>
                   ) : villagesError ? (
                     <div className="alert alert-warning">{villagesError}</div>
-                  ) : trustDetails.feedback?.length > 0 ? (
+                  ) : topVillages.length > 0 ? (
                     <div className="list-group">
-                      {trustDetails.feedback.slice(0, 3).map((feedback, idx) => {
-                        const village = getVillageDetails(feedback.village_id);
-                        return (
-                          <div key={idx} className="list-group-item">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div>
-                                <span className="badge bg-primary me-2">#{idx + 1}</span>
-                                <strong>Village: {village.village_name || village.name || "Unknown Village"}</strong>
+                      {topVillages.map((village, idx) => (
+                        <div key={village.id} className="list-group-item">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <span className="badge bg-primary me-2">#{village.rank}</span>
+                              <strong>Village: {village.name}</strong>
+                            </div>
+                            <div className="text-end">
+                              <div className="text-success fw-bold">
+                                ₹ {village.helpAmount.toLocaleString()}
                               </div>
-                              <div className="text-end">
-                                <div className="text-warning">⭐ {feedback.rating || 0}</div>
-                                <small className="text-muted">"{feedback.message || "No feedback"}"</small>
-                              </div>
+                              <small className="text-muted">Total Contributed</small>
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="alert alert-info">No feedback data available</div>
+                    <div className="alert alert-info">No village data available</div>
                   )}
                 </div>
               </div>
             </div>
-
             {/* Projects Section */}
             <div className="col-md-7">
               <div className="row g-3">
