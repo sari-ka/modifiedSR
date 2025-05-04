@@ -105,6 +105,9 @@ Content-Type: application/json
 ###
 GET http://localhost:9125/village-api/Lakshmi Nagar/upcoming
 
+### trust name
+GET http://localhost:9125/village-api/trust/680dfb3d50b04827e6f157b2
+
 ###
 PUT http://localhost:9125/village-api/village/680dfb7050b04827e6f157ba/680ef4862d8c80021269a3b3/start
 
@@ -118,6 +121,9 @@ GET http://localhost:9125/trust-api/trust
 
 ###
 get http://localhost:9125/trust-api/trust/Siri
+
+###
+get http://localhost:9125/trust-api/trust/Tata_Trust/past-projects
 
 ###
 POST http://localhost:9125/trust-api/trust

@@ -3,6 +3,7 @@ const villageApp = exp.Router();
 const eah = require('express-async-handler')
 const Village = require('../models/VillageSchema')
 const Trust = require('../models/TrustSchema')
+const mongoose = require('mongoose')
 villageApp.use(exp.json())
 
 // village to get updated who accepted the problem

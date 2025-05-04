@@ -13,6 +13,7 @@ const VillageProfile = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalProjects, setModalProjects] = useState([]);
   const [modalTitle, setModalTitle] = useState("");
+  const [trustNames, setTrustNames] = useState({});
   const [problemSummary, setProblemSummary] = useState({
     pending: 0,
     ongoing: 0,
@@ -25,7 +26,20 @@ const VillageProfile = () => {
   const MAPS_API_KEY = "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678"; // Replace with your actual key
 
   const villageId = currentVillage || localStorage.getItem("villageId");
-
+  const fetchTrustName = async (trustId) => {
+    if (!trustId) return;
+  
+    try {
+      const response = await axios.get(`http://localhost:9125/village-api/trust/${trustId}`);
+      console.log(response)
+      const trustName = response.data.trust_name;
+      setTrustNames(prev => ({ ...prev, [trustId]: trustName }));
+    } catch (error) {
+      console.log(`Error fetching trust name for ID ${trustId}:`, error);
+      setTrustNames(prev => ({ ...prev, [trustId]: "Unknown Trust" }));
+    }
+  };
+   
   const handleProjectClick = async (projectType) => {
     setModalTitle(`${projectType.charAt(0).toUpperCase() + projectType.slice(1)} Projects`);
     
@@ -184,6 +198,17 @@ const VillageProfile = () => {
     }
   }, [villageDetails]);
 
+  useEffect(() => {
+    if (showModal && modalProjects.length > 0) {
+      modalProjects.forEach(project => {
+        if (project.accepted_trust) {
+          fetchTrustName(project.accepted_trust);
+          console.log(trustNames)
+        }
+      });
+    }
+  }, [showModal, modalProjects]);  
+
   if (!villageId) {
     return <div className="alert alert-danger text-center py-4">No village selected</div>;
   }
@@ -191,6 +216,7 @@ const VillageProfile = () => {
   if (loading && !villageDetails) {
     return <div className="text-center py-4"><div className="spinner-border" role="status"><span className="visually-hidden">Loading...</span></div></div>;
   }
+  console.log(modalProjects)
 
   return (
     <div className="container my-4" style={{ maxWidth: '1200px' }}>
@@ -381,7 +407,7 @@ const VillageProfile = () => {
                     <div className="mt-2">
                       <span className="text-muted">Accepted by: </span>
                       <span className="fw-bold" style={{ color: '#2ecc71' }}>
-                        {project.trust_name || 'Unknown Trust'}
+                        {trustNames[project.accepted_trust] || 'Loading...'}
                       </span>
                     </div>
                   )}

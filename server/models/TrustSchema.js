@@ -70,6 +70,7 @@ const TrustSchema = new mongoose.Schema({
       solved_time: { type: Date },
   
       money_trust: { type: Number, default: 0 },
+      proof_images: [{ type: String }]
     }
   ],
 

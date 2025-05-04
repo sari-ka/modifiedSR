@@ -3,8 +3,22 @@ const trustApp = exp.Router();
 const eah = require('express-async-handler');
 const Trust = require('../models/TrustSchema');
 const Village = require('../models/VillageSchema');
-
+const multer = require('multer');
+const path = require('path');
+const fs = require("fs");
 trustApp.use(exp.json());
+
+// Create directory if not exists
+const uploadDir = path.join(__dirname, "../uploads/proofs");
+fs.mkdirSync(uploadDir, { recursive: true });
+
+// Multer config
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${file.originalname}`)
+});
+const upload = multer({ storage });
 
 // Get all trusts
 trustApp.get('/trust', eah(async (req, res) => {
@@ -78,9 +92,11 @@ trustApp.put('/trust/:villageId/:problemId/start', eah(async (req, res) => {
 }));
 
 // ✅ Update a problem's status by trust as done
-trustApp.put('/trust/:villageId/:problemId/done', eah(async (req, res) => {
+trustApp.put('/trust/:villageId/:problemId/done', upload.single('proof'), eah(async (req, res) => {
   const { villageId, problemId } = req.params;
+  const filePath = req.file ? `/uploads/proofs/${req.file.filename}` : null;
 
+  // 1. Update in Village
   const village = await Village.findById(villageId);
   if (!village) return res.status(404).send({ message: "Village not found" });
 
@@ -88,17 +104,38 @@ trustApp.put('/trust/:villageId/:problemId/done', eah(async (req, res) => {
   if (!problem) return res.status(404).send({ message: "Problem not found" });
 
   problem.done_by_trust = "done";
-
-  // Optional: auto-move to 'past' if village also completed
-  if (problem.done_by_village==="done") {
-    problem.status = 'past';
-    const res = await Trust.findOneAndUpdate(
-      { "assigned_problems.problem_id": problemId },
-      { $set: { "assigned_problems.$.status": "past" } }
-    );
+  if (filePath) {
+    problem.proof_image = filePath;
   }
+
   await village.save();
-  res.send({ message: "Trust status updated", payload: problem });
+
+  // 2. Update in Trust
+  const trust = await Trust.findOne({
+    "assigned_problems.problem_id": problemId,
+    "assigned_problems.village_id": villageId
+  });
+
+  if (trust) {
+    const assignedProblem = trust.assigned_problems.find(
+      p => p.problem_id.toString() === problemId
+    );
+
+    if (assignedProblem) {
+      if (filePath) {
+        assignedProblem.proof_images = assignedProblem.proof_images || [];
+        assignedProblem.proof_images.push(filePath);
+      }
+
+      if (problem.done_by_village === "done") {
+        assignedProblem.status = "past";
+      }
+
+      await trust.save();
+    }
+  }
+
+  res.send({ message: "Problem marked as done by trust", payload: problem });
 }));
 
 // ✅ Get problems associated with a trust (via trust name or id)
@@ -355,5 +392,40 @@ trustApp.get('/problem-title/:problemId', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 })
+
+// Get all past projects for a trust
+trustApp.get('/trust/:trustName/past-projects', async (req, res) => {
+  const { trustName } = req.params;
+
+  try {
+    const trust = await Trust.findOne({ name: trustName });
+    if (!trust) return res.status(404).json({ error: 'Trust not found' });
+
+    const pastProblems = trust.assigned_problems.filter(
+      p => p.status === 'past'
+    );
+
+    // const villageIds = [...new Set(pastProblems.map(p => p.village_id.toString()))];
+    const villages = await Village.find({ _id: { $in: villageIds } });
+
+    const enriched = pastProblems.map(p => {
+      const village = villages.find(v => v._id.toString() === p.village_id.toString());
+      const matchedProblem = village?.problems?.id(p.problem_id);
+
+      return {
+        villageName: village?.name || 'Unknown',
+        title: matchedProblem?.title || 'Unknown',
+        description: matchedProblem?.description || '',
+        proof_images: p.proof_images || [],
+      };
+    });
+
+    res.json({ pastProjects: enriched });
+  } catch (err) {
+    console.error('Error fetching past projects:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 module.exports = trustApp;

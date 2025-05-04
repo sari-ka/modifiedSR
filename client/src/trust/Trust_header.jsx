@@ -62,6 +62,11 @@ function Trust_header() {
               Ongoing projects
             </Link>
           </li>
+          <li className="nav-item">
+            <Link className="nav-link" to="past" onClick={closeSidebar}>
+              Past projects
+            </Link>
+          </li>
           <li className="nav-item mt-4">
             <button onClick={handleLogout} className="btn btn-danger w-100 p-2">
               Logout

@@ -26,6 +26,7 @@ import Upcoming_tr from './trust/Upcoming_tr'
 import Ongoing_tr from './trust/Ongoing_tr'
 import Ongoing_v from './village/Ongoing_v'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Past_tr from './trust/Past_tr'
 function App() {
 
   let b = createBrowserRouter([
@@ -76,6 +77,10 @@ function App() {
             {
               path:'ongoing',
               element:<Ongoing_tr/>
+            },
+            {
+              path:'past',
+              element:<Past_tr/>
             }
           ]
           }

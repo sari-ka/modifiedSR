@@ -4,10 +4,13 @@ const mongoose = require('mongoose')
 const villageApp = require('./API/VillageApi')
 const trustApp = require('./API/TrustApi')
 const individualApp = require('./API/IndividualApi')
+const path = require('path');
 const cors = require('cors')
 app.use(cors())
 require('dotenv').config()
 const port = process.env.PORT || 8965
+
+app.use('/uploads', exp.static(path.join(__dirname, 'uploads')));
 
 app.use(exp.json())
 mongoose.connect(process.env.DBURL)

@@ -40,7 +40,7 @@ const TrustProfile = () => {
     console.log('Fetching title for problemId:', problemId);
   
     try {
-      const res = await fetch(`/problem-title/${problemId}`);
+      const res = await fetch(`http://localhost:9125/trust-api/problem-title/${problemId}`);
       const data = await res.json();
   
       console.log('Response for', problemId, ':', data);
