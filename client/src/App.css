@@ -1,0 +1,9 @@
+.zoomed {
+    transform: scale(1.8);
+    cursor: zoom-out !important;
+  }
+  
+  .unzoomed {
+    transform: scale(1);
+  }
+  

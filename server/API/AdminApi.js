@@ -59,8 +59,8 @@ AdminApp.get('/admins/verified-trusts', eah(async (req, res) => {
   }));
   
   // Update receipt status
-  // PATCH /admin/receipt/:email/:receiptId
-router.patch('/admin/receipt/:email/:receiptId', async (req, res) => {
+// PATCH /admin/receipt/:email/:receiptId
+AdminApp.patch('/admin/receipt/:email/:receiptId', async (req, res) => {
   const { email, receiptId } = req.params;
   const { status } = req.body;
 
@@ -75,7 +75,6 @@ router.patch('/admin/receipt/:email/:receiptId', async (req, res) => {
       return res.status(404).json({ message: "Receipt not found" });
     }
 
-    // Update receipt status
     receipt.status = status;
     await individual.save();
 
@@ -83,34 +82,27 @@ router.patch('/admin/receipt/:email/:receiptId', async (req, res) => {
       return res.status(200).json({ message: 'Receipt status updated only' });
     }
 
-    const { type, amount, ref_name } = receipt; // ref_name is an email now
+    const { type, amount, ref_name } = receipt; // ref_name = name of trust or village
 
     if (type === 'trust') {
-      const trust = await Trust.findOne({ email: ref_name });
+      const trust = await Trust.findOne({ name: ref_name });
       if (!trust) {
-        return res.status(404).json({ message: "Trust not found by email" });
+        return res.status(404).json({ message: "Trust not found by name" });
       }
 
       trust.funding.total_received += amount;
       await trust.save();
-
     } else if (type === 'village') {
-      const village = await Village.findOne({ email: ref_name });
+      const village = await Village.findOne({ name: ref_name });
       if (!village) {
-        return res.status(404).json({ message: "Village not found by email" });
+        return res.status(404).json({ message: "Village not found by name" });
       }
 
       const userIndex = village.user.findIndex(user => user.user_name === individual.email);
-
       if (userIndex !== -1) {
-        // Existing user in the village
         village.user[userIndex].total_money += amount;
       } else {
-        // New user
-        village.user.push({
-          user_name: individual.email,
-          total_money: amount,
-        });
+        village.user.push({ user_name: individual.email, total_money: amount });
       }
 
       await village.save();
@@ -123,8 +115,6 @@ router.patch('/admin/receipt/:email/:receiptId', async (req, res) => {
     return res.status(500).json({ message: 'Server error while updating receipt status' });
   }
 });
-
-
 
 // Route to verify a village by setting 'approved' status to true
 AdminApp.patch('/admin/verify-village/:id', eah(async (req, res) => {

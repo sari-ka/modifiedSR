@@ -290,6 +290,8 @@ GET http://localhost:9125/village-api/680dfb7050b04827e6f157ba/problem/680ef4862
 ###
 GET http://localhost:9125/individual-api/individual
 
+###
+GET http://localhost:9125/individual-api/individual/sarikareddyanikalla178@gmail.com
 
 ###
 POST http://localhost:9125/individual-api/individual

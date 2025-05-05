@@ -24,7 +24,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ========== ✅ Upload Receipt Route ==========
 individualApp.post('/upload-receipt', upload.single('receipt'), async (req, res) => {
   const { type, refName, upiId, amount, email } = req.body;
 
@@ -94,5 +93,24 @@ individualApp.put('/individual',eah(async(req,res)=>{
     let updatedindividual=await Individual.findOneAndUpdate({email:individual.email},{$set:{...individual}},{new:true})
     res.send({message:"updated",payload:updatedindividual})
 }))
+
+individualApp.get('/individual-total-funding', async (req, res) => {
+  try {
+    const individualList = await Individual.find();
+
+    // Calculate total funded amount for each individual
+    const individualsWithFundedAmount = await Promise.all(individualList.map(async (individual) => {
+      const approvedReceipts = individual.receipts.filter(receipt => receipt.status === 'approved');
+      const totalFundedAmount = approvedReceipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+      return { email: individual.email, totalFundedAmount }; // Only return email and total funded amount
+    }));
+
+    res.send({ message: "Total funded amounts for individuals", payload: individualsWithFundedAmount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Error fetching total funded amounts" });
+  }
+});
+
 
 module.exports=individualApp

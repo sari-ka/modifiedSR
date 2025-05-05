@@ -1,0 +1,52 @@
+.users-container {
+    padding: 20px;
+    background-color: #f8f9fa;
+  }
+  
+  .card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-10px);
+  }
+  
+  .user-card .card-body {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #343a40;
+  }
+  
+  .card-text {
+    font-size: 1rem;
+    color: #6c757d;
+  }
+  
+  .funded-amount {
+    margin-top: 15px;
+  }
+  
+  .amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #28a745;
+  }
+  
+  .alert {
+    margin-top: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .col-md-4 {
+      margin-bottom: 20px;
+    }
+  }
+  

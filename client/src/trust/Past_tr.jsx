@@ -24,6 +24,7 @@ function Past_tr() {
     const fetchPastProjects = async () => {
       try {
         const res = await axios.get(`http://localhost:9125/trust-api/trust/${trustName}/past-projects`);
+        console.log(res)
         setProjects(res.data.pastProjects || []);
       } catch (err) {
         console.error('Error fetching past projects:', err);

@@ -4,7 +4,8 @@ import axios from 'axios';
 function Receipts() {
   const [receipts, setReceipts] = useState([]);
   const [message, setMessage] = useState('');
-  const [selectedReceipt, setSelectedReceipt] = useState(null); // for modal
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const fetchReceipts = async () => {
     try {
@@ -15,14 +16,17 @@ function Receipts() {
     }
   };
 
-  const updateStatus = async (email, receiptId, status) => {
+  const updateStatus = async (individualEmail, receiptId, status) => {
     try {
-      const res = await axios.patch(`http://localhost:9125/admin-api/admin/receipt/${email}/${receiptId}`, {
-        status,
-      });
+      const res = await axios.patch(
+        `http://localhost:9125/admin-api/admin/receipt/${individualEmail}/${receiptId}`,
+        { status }
+      );
       setMessage(res.data.message);
-      setSelectedReceipt(null); // close modal
-      fetchReceipts(); // Refresh list
+      setSelectedReceipt(null);
+      setIsZoomed(false);
+
+      window.location.reload(); // refresh to see updated list
     } catch (err) {
       console.error('Error updating status:', err);
       setMessage('Failed to update status');
@@ -43,71 +47,112 @@ function Receipts() {
         <p>No pending receipts.</p>
       ) : (
         <div className="row">
-          {receipts.map((item, index) => {
-            const receipt = item.receipt;
-            return (
-              <div className="col-md-6" key={index}>
-                <div className="card mb-4 shadow-sm">
-                  <div className="card-body">
-                    <h5 className="card-title">{receipt.ref_name}</h5>
-                    <p><strong>Type:</strong> {receipt.type}</p>
-                    <p><strong>Amount:</strong> ₹{receipt.amount}</p>
-                    <p><strong>Submitted By:</strong> {item.individual_name} ({item.individual_email})</p>
-                    <button
-                      className="btn btn-primary mt-2"
-                      onClick={() => setSelectedReceipt({ ...item, receiptId: receipt._id })}
-                    >
-                      See Receipt
-                    </button>
-                  </div>
+          {receipts.map((item, index) => (
+            <div className="col-md-6" key={index}>
+              <div className="card mb-4 shadow-sm">
+                <div className="card-body">
+                  <h5 className="card-title">{item.ref_name}</h5>
+                  <p><strong>Type:</strong> {item.type}</p>
+                  <p><strong>Amount:</strong> ₹{item.amount}</p>
+                  <p><strong>Submitted By:</strong> {item.individualName} ({item.individualEmail})</p>
+                  <button
+                    className="btn btn-primary mt-2 px-2 py-1"
+                    onClick={() => {
+                      setSelectedReceipt(item);
+                      setIsZoomed(false);
+                    }}
+                  >
+                    See Receipt
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Modal */}
       {selectedReceipt && (
-        <div className="modal show fade d-block" tabIndex="-1" onClick={() => setSelectedReceipt(null)}>
-          <div className="modal-dialog modal-dialog-centered modal-lg" onClick={e => e.stopPropagation()}>
+        <div
+          className="modal show fade d-block"
+          tabIndex="-1"
+          onClick={() => {
+            setSelectedReceipt(null);
+            setIsZoomed(false);
+          }}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered modal-lg"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Receipt Details</h5>
-                <button type="button" className="btn-close" onClick={() => setSelectedReceipt(null)}></button>
+                <button
+                  type="button"
+                  className="btn-close btn px-2 py-1"
+                  onClick={() => {
+                    setSelectedReceipt(null);
+                    setIsZoomed(false);
+                  }}
+                ></button>
               </div>
               <div className="modal-body">
-                <p><strong>Type:</strong> {selectedReceipt.receipt.type}</p>
-                <p><strong>Reference:</strong> {selectedReceipt.receipt.ref_name}</p>
-                <p><strong>Amount:</strong> ₹{selectedReceipt.receipt.amount}</p>
-                <p><strong>UPI ID:</strong> {selectedReceipt.receipt.upi_id}</p>
-                <p><strong>Submitted By:</strong> {selectedReceipt.individual_name} ({selectedReceipt.individual_email})</p>
-                <p><strong>Submitted On:</strong> {new Date(selectedReceipt.receipt.submitted_on).toLocaleString()}</p>
+                <p><strong>Type:</strong> {selectedReceipt.type}</p>
+                <p><strong>Reference (Trust/Village Name):</strong> {selectedReceipt.ref_name}</p>
+                <p><strong>Amount:</strong> ₹{selectedReceipt.amount}</p>
+                <p><strong>UPI ID:</strong> {selectedReceipt.upi_id}</p>
+                <p><strong>Submitted By:</strong> {selectedReceipt.individualName} ({selectedReceipt.individualEmail})</p>
+                <p><strong>Submitted On:</strong> {new Date(selectedReceipt.submitted_on).toLocaleString()}</p>
+
                 <img
-                  src={`http://localhost:9125${selectedReceipt.receipt.receipt_img}`}
+                  src={`http://localhost:9125${selectedReceipt.receipt_img}`}
                   alt="Receipt"
                   className="img-fluid rounded shadow-sm mt-3"
-                  style={{ maxHeight: '400px' }}
+                  style={{
+                    cursor: isZoomed ? 'zoom-out' : 'zoom-in',
+                    transition: 'transform 0.3s ease',
+                    transform: isZoomed ? 'scale(1.8)' : 'scale(1)',
+                    maxHeight: isZoomed ? '90vh' : '400px',
+                    display: 'block',
+                    margin: '0 auto'
+                  }}
+                  onClick={() => setIsZoomed(prev => !prev)}
                 />
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-success"
+                  className="btn btn-success px-2 py-1"
                   onClick={() =>
-                    updateStatus(selectedReceipt.individual_email, selectedReceipt.receipt._id, 'approved')
+                    updateStatus(
+                      selectedReceipt.individualEmail,
+                      selectedReceipt.receiptId,
+                      'approved'
+                    )
                   }
                 >
                   Approve
                 </button>
                 <button
-                  className="btn btn-danger"
+                  className="btn btn-danger px-2 py-1"
                   onClick={() =>
-                    updateStatus(selectedReceipt.individual_email, selectedReceipt.receipt._id, 'rejected')
+                    updateStatus(
+                      selectedReceipt.individualEmail,
+                      selectedReceipt.receiptId,
+                      'rejected'
+                    )
                   }
                 >
                   Reject
                 </button>
-                <button className="btn btn-secondary" onClick={() => setSelectedReceipt(null)}>Close</button>
+                <button
+                  className="btn btn-secondary px-2 py-1"
+                  onClick={() => {
+                    setSelectedReceipt(null);
+                    setIsZoomed(false);
+                  }}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

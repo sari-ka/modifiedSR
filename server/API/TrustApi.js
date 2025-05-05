@@ -405,7 +405,7 @@ trustApp.get('/trust/:trustName/past-projects', async (req, res) => {
       p => p.status === 'past'
     );
 
-    // const villageIds = [...new Set(pastProblems.map(p => p.village_id.toString()))];
+    const villageIds = [...new Set(pastProblems.map(p => p.village_id.toString()))];
     const villages = await Village.find({ _id: { $in: villageIds } });
 
     const enriched = pastProblems.map(p => {
