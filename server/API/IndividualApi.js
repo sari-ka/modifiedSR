@@ -2,7 +2,68 @@ const exp=require('express')
 const individualApp=exp.Router();
 const eah=require('express-async-handler')
 const Individual = require('../models/IndividualSchema')
+const Trust = require('../models/TrustSchema'); 
+const Village = require('../models/TrustSchema'); 
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 individualApp.use(exp.json())
+
+const receiptUploadPath = path.join(__dirname, '../uploads/receipts');
+fs.mkdirSync(receiptUploadPath, { recursive: true });
+
+// Multer setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, receiptUploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ storage });
+
+// ========== ✅ Upload Receipt Route ==========
+individualApp.post('/upload-receipt', upload.single('receipt'), async (req, res) => {
+  const { type, refName, upiId, amount, email } = req.body;
+
+  console.log('Received receipt upload:', {
+    type, refName, upiId, amount, email,
+    file: req.file ? req.file.originalname : 'No file'
+  });
+
+  if (!type || !refName || !upiId || !amount || !email || !req.file) {
+    return res.status(400).json({ error: 'Please provide all required fields including file.' });
+  }
+
+  try {
+    const individual = await Individual.findOne({ email });
+    if (!individual) {
+      return res.status(404).json({ error: 'Individual not found' });
+    }
+
+    individual.receipts.push({
+      type,
+      ref_name: refName,
+      upi_id: upiId,
+      receipt_img: `/uploads/receipts/${req.file.filename}`,
+      amount,
+      status: 'pending',
+      submitted_on: new Date()
+    });
+
+    await individual.save();
+
+    console.log('Receipt saved for:', email);
+    res.status(200).json({ message: 'Receipt uploaded successfully' });
+
+  } catch (error) {
+    console.error('Error saving receipt:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 individualApp.get('/individual',eah(async(req,res)=>{
      const individualList = await Individual.find();

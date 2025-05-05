@@ -12,15 +12,15 @@ function Login_in() {
     console.log("Login Data: ", data);
 
     // Update global context
-    setCurrentIndividual({ username: data.username });
+    setCurrentIndividual({ email: data.email });
 
     // Store user data in localStorage (optional)
     localStorage.setItem('individualUser', JSON.stringify({
-      username: data.username
+      email: data.email
     }));
 
     // Navigate to profile page
-    navigate(`/individual/profile/${data.username}`);
+    navigate(`/individual/profile/${data.email}`);
   }
 
   return (
@@ -34,7 +34,7 @@ function Login_in() {
           <label className='form-label'>Email</label>
           <input 
             type="email" 
-            {...register("username", { required: true })} // Notice username instead of email to match context
+            {...register("email", { required: true })} // Notice username instead of email to match context
             className='form-control'
           />
           {errors.username?.type === 'required' && <p className='fs-6 text-danger'>*Email is required</p>}

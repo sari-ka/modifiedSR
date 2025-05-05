@@ -18,15 +18,7 @@ const AdminSchema = new mongoose.Schema({
       approval_date: { type: Date, default: Date.now },
     },
   ],
-
-  rewards: [
-    {
-      recipient_type: { type: String, enum: ["trust", "individual", "village"], required: true },
-      recipient_id: { type: mongoose.Schema.Types.ObjectId, required: true },
-      reward_type: { type: String, enum: ["certificate", "funding", "recognition"] },
-      date: { type: Date, default: Date.now },
-    },
-  ],
+  
 });
 
 

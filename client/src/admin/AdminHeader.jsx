@@ -46,6 +46,9 @@ function AdminHeader() {
           <li className="nav-item">
             <Link className="nav-link" to="verified-trusts" onClick={closeSidebar}>Verified Trusts</Link>
           </li>
+          <li className="nav-item">
+            <Link className="nav-link" to="receipts" onClick={closeSidebar}>Receipts</Link>
+          </li>
           <li className="nav-item mt-4">
             <button onClick={handleLogout} className="btn btn-danger w-100 p-2">Logout</button>
           </li>

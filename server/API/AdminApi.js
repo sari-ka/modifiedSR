@@ -4,6 +4,7 @@ const eah = require('express-async-handler')
 const mongoose = require('mongoose')
 const Admin = require('../models/AdminSchema')
 const Village = require('../models/VillageSchema')
+const Individual = require('../models/IndividualSchema')
 const Trust = require('../models/TrustSchema')
 AdminApp.use(exp.json())
 
@@ -28,6 +29,103 @@ AdminApp.get('/admins/verified-trusts', eah(async (req, res) => {
     res.status(200).send({ message: "Verified trusts fetched", payload: verifiedTrusts });
   }));
   
+  AdminApp.get('/admins/pending-receipts', eah(async (req, res) => {
+    const individualsWithPending = await Individual.find({ "receipts.status": "pending" });
+  
+    const pendingReceipts = [];
+  
+    individualsWithPending.forEach(ind => {
+      ind.receipts.forEach(receipt => {
+        if (receipt.status === 'pending') {
+          pendingReceipts.push({
+            individualEmail: ind.email,
+            individualName: ind.name,
+            contact: ind.contact,
+            address: ind.address,
+            receiptId: receipt._id,
+            type: receipt.type,
+            ref_name: receipt.ref_name,
+            upi_id: receipt.upi_id,
+            receipt_img: receipt.receipt_img,
+            amount: receipt.amount,
+            submitted_on: receipt.submitted_on,
+            status: receipt.status
+          });
+        }
+      });
+    });
+  
+    res.status(200).send({ message: "Pending receipts fetched successfully", payload: pendingReceipts });
+  }));
+  
+  // Update receipt status
+  // PATCH /admin/receipt/:email/:receiptId
+router.patch('/admin/receipt/:email/:receiptId', async (req, res) => {
+  const { email, receiptId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const individual = await Individual.findOne({ email });
+    if (!individual) {
+      return res.status(404).json({ message: "Individual not found" });
+    }
+
+    const receipt = individual.receipts.id(receiptId);
+    if (!receipt) {
+      return res.status(404).json({ message: "Receipt not found" });
+    }
+
+    // Update receipt status
+    receipt.status = status;
+    await individual.save();
+
+    if (status !== 'approved') {
+      return res.status(200).json({ message: 'Receipt status updated only' });
+    }
+
+    const { type, amount, ref_name } = receipt; // ref_name is an email now
+
+    if (type === 'trust') {
+      const trust = await Trust.findOne({ email: ref_name });
+      if (!trust) {
+        return res.status(404).json({ message: "Trust not found by email" });
+      }
+
+      trust.funding.total_received += amount;
+      await trust.save();
+
+    } else if (type === 'village') {
+      const village = await Village.findOne({ email: ref_name });
+      if (!village) {
+        return res.status(404).json({ message: "Village not found by email" });
+      }
+
+      const userIndex = village.user.findIndex(user => user.user_name === individual.email);
+
+      if (userIndex !== -1) {
+        // Existing user in the village
+        village.user[userIndex].total_money += amount;
+      } else {
+        // New user
+        village.user.push({
+          user_name: individual.email,
+          total_money: amount,
+        });
+      }
+
+      await village.save();
+    }
+
+    return res.status(200).json({ message: 'Receipt approved and data updated successfully' });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error while updating receipt status' });
+  }
+});
+
+
+
 // Route to verify a village by setting 'approved' status to true
 AdminApp.patch('/admin/verify-village/:id', eah(async (req, res) => {
   const villageId = req.params.id;

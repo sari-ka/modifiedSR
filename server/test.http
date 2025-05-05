@@ -290,6 +290,7 @@ GET http://localhost:9125/village-api/680dfb7050b04827e6f157ba/problem/680ef4862
 ###
 GET http://localhost:9125/individual-api/individual
 
+
 ###
 POST http://localhost:9125/individual-api/individual
 Content-Type: application/json
@@ -345,6 +346,8 @@ Content-Type: application/json
   "rating": 4.5
 }
 
+
+
 # Admin req
 
 ###
@@ -355,3 +358,6 @@ GET http://localhost:9125/admin-api/admins/verified-villages
 
 ###
 GET http://localhost:9125/admin-api/admins/unverified-villages
+
+###
+GET http://localhost:9125/admin-api/admins/pending-receipts

@@ -39,7 +39,9 @@ function Individual_header() {
           <li className="nav-item">
             <Link className="nav-link fs-5" to="trusts">Trusts</Link>
           </li>
-          
+          <li className="nav-item">
+            <Link className="nav-link fs-5" to="add-receipt">Add Receipt</Link>
+          </li>
           {/* Conditional links */}
           {user ? (
             <>

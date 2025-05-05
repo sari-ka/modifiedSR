@@ -9,24 +9,17 @@ const IndividualSchema = new mongoose.Schema({
   upi_id: { type: String },
   contact: { type: String, required: true },
 
-  funding: [
+  receipts: [
     {
-      recipient_type: { type: String, enum: ["Trust", "Village"], required: true },
-      recipient_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+      type: { type: String, enum: ['trust', 'village'], required: true },
+      ref_name: { type: String, required: true },
+      upi_id: String,
+      receipt_img: String, // stored path
       amount: Number,
-      date: { type: Date, default: Date.now },
-    },
-  ],
-
-  resources_shared: [
-    {
-      recipient_type: { type: String, enum: ["Trust", "Village"], required: true },
-      recipient_id: { type: mongoose.Schema.Types.ObjectId, required: true },
-      resources: [String],
-    },
-  ],
-
-  rating: { type: Number, default: 0 }, // Individual rating based on contributions
+      status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+      submitted_on: { type: Date, default: Date.now }
+    }
+  ]
 });
 
 const Individual = mongoose.model("individual", IndividualSchema);

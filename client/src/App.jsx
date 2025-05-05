@@ -36,6 +36,8 @@ import Verified_tr from './admin/verified_tr'
 import AdminHeader from './admin/AdminHeader'
 import Village_i from './common/Village_i'
 import Trust_i from './common/Trust_i'
+import Add_receipt from './individual/Add_receipt'
+import Receipts from './admin/Receipts'
 function App() {
 
   let b = createBrowserRouter([
@@ -179,7 +181,11 @@ function App() {
             {
               path:'trusts',
               element:<Trust_i/>
-            }         
+            },
+            {
+              path:'add-receipt',
+              element:<Add_receipt/>
+            }          
           ]
           }
           ]
@@ -215,7 +221,11 @@ function App() {
             {
               path: 'verified-trusts',
               element:<Verified_tr/>
-            }         
+            },
+            {
+              path: 'receipts',
+              element:<Receipts/>
+            }          
           ]
           }
           ]
