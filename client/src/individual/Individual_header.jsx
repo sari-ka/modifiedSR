@@ -11,13 +11,8 @@ function Individual_header() {
       setUser(storedUser ? JSON.parse(storedUser) : null);
     };
 
-    // Check auth on initial load
     checkAuth();
-
-    // Set up listener for storage changes
     window.addEventListener('storage', checkAuth);
-
-    // Clean up listener
     return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
@@ -28,37 +23,37 @@ function Individual_header() {
   };
 
   return (
-    <div className="mt-3 ms-3">
-      <ul className="nav d-flex justify-content-between align-items-center">
-        <p className="display-6">SupportRoots</p>
-        <div className="d-flex align-items-center">
-          {/* Always show these links */}
+    <div className="bg-white shadow-sm py-3 px-4 sticky-top">
+      <div className="container-fluid d-flex justify-content-between align-items-center">
+        <h3 className="mb-0 fw-semibold text-primary">SupportRoots</h3>
+        <ul className="nav gap-3 align-items-center mb-0">
           <li className="nav-item">
-            <Link className="nav-link fs-5" to="villages">Villages</Link>
+            <Link className="nav-link text-dark fs-6 fw-medium" to="villages">Villages</Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link fs-5" to="trusts">Trusts</Link>
+            <Link className="nav-link text-dark fs-6 fw-medium" to="trusts">Trusts</Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link fs-5" to="add-receipt">Add Receipt</Link>
+            <Link className="nav-link text-dark fs-6 fw-medium" to="add-receipt">Add Receipt</Link>
           </li>
-          {/* Conditional links */}
           {user ? (
             <>
               <li className="nav-item">
-                <Link className="nav-link fs-5" to={`profile/${user.username}`}>Profile</Link>
+                <Link className="nav-link text-dark fs-6 fw-medium" to={`profile/${user.username}`}>Profile</Link>
               </li>
               <li className="nav-item">
-                <button className="btn btn-outline-danger ms-3" onClick={handleLogout}>Logout</button>
+              <button className="btn btn-outline-danger px-3 py-2 fw-semibold" onClick={handleLogout}>
+                Logout
+              </button>
               </li>
             </>
           ) : (
             <li className="nav-item">
-              <Link className="nav-link fs-5" to="login">Login</Link>
+              <Link className="nav-link text-dark fs-6 fw-medium" to="login">Login</Link>
             </li>
           )}
-        </div>
-      </ul>
+        </ul>
+      </div>
       <Outlet />
     </div>
   );

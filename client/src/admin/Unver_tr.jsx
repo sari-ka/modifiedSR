@@ -66,7 +66,7 @@ function Unver_tr() {
                   <tr key={trust._id}>
                     <td>{trust.name}</td>
                     <td>{trust.email}</td>
-                    <td>{trust.phone}</td>
+                    <td>{trust.contact}</td>
                     <td>{trust.address}</td>
                     <td>
                       {!trust.approved ? (

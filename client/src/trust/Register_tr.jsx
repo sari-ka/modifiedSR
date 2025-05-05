@@ -56,6 +56,12 @@ function Register_tr() {
           {errors.phonenumber && <p>*{errors.phonenumber.message}</p>}
         </div>
 
+        
+      <div className='mb-3'>
+        <label htmlFor="" className='form-label '>Account Name</label>
+        <input type="text" {...register("acc_name",{required:true})} className='form-control '/>
+      </div>
+
         <div className='mb-3'>
           <label htmlFor="" className='form-label '>Address</label>
           <input type="text" {...register("address",{required:true})} className='form-control '/>

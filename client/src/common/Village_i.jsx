@@ -32,10 +32,11 @@ function Village_i() {
 
   // Handle QR code generation for UPI payment
   const generateUPIQRCode = (village) => {
-    const upiLink = `upi://pay?pa=${village.upiId}&pn=${village.name}&mc=${village.merchantCode}&tid=${village.transactionId}&tr=${village.transactionReference}&am=${village.amount}&cu=INR`;
-    return upiLink;
+    if (!village.upi_id || !village.acc_name) return '';
+    return `upi://pay?pa=${village.upi_id}&pn=${encodeURIComponent(village.acc_name)}&cu=INR`;
   };
-
+  
+  
   // Modal for viewing detailed village information
   const handleVillageClick = (village) => {
     setSelectedVillage(village);

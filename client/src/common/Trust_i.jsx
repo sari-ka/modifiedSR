@@ -54,6 +54,12 @@ function Trust_i() {
     setSelectedTrust(null);
   };
 
+  const generateUPIQRCode = (trust) => {
+    if (!trust.upi_id || !trust.acc_name) return '';
+    return `upi://pay?pa=${trust.upi_id}&pn=${encodeURIComponent(trust.acc_name)}&cu=INR`;
+  };
+  
+
   return (
     <div className="trust-container">
       {trusts.map((trust) => {
@@ -93,8 +99,14 @@ function Trust_i() {
             <p><strong>Total Spent on Villages:</strong> ₹{selectedTrust.totalSpent?.toLocaleString() ?? '0'}</p>
 
             <div style={{ margin: '10px 0' }}>
-              {/* ✅ UPI QR Code inside modal */}
-              <QRCodeCanvas value={`upi://pay?pa=${selectedTrust.upiID || 'sampleupi@upi'}&pn=${selectedTrust.name}&mc=0000&tid=0000000000&tr=000000&tn=Donation&am=${selectedTrust.totalSpent || 0}&cu=INR`} size={150} />
+            {selectedTrust.upi_id && selectedTrust.acc_name ? (
+              <div style={{ margin: '10px 0' }}>
+                <QRCodeCanvas value={generateUPIQRCode(selectedTrust)} size={150} />
+                <p style={{ fontSize: '0.8rem' }}>Scan for UPI Payment</p>
+              </div>
+            ) : (
+              <p style={{ color: 'gray' }}>UPI payment details not available</p>
+            )}
               <p style={{ fontSize: '0.8rem' }}>Scan for UPI Payment</p>
             </div>
 

@@ -104,6 +104,15 @@ trustApp.put('/trust/:villageId/:problemId/done', upload.single('proof'), eah(as
   if (!problem) return res.status(404).send({ message: "Problem not found" });
 
   problem.done_by_trust = "done";
+  if(problem.done_by_village = "done")
+  {
+    problem.status = 'past';
+    await Trust.findOneAndUpdate(
+      { "assigned_problems.problem_id": problemId },
+      { $set: { "assigned_problems.$.status": "past" } }
+    );
+  }
+
   if (filePath) {
     problem.proof_image = filePath;
   }

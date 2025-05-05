@@ -56,6 +56,11 @@ function Register_vi() {
         {errors.phonenumber?.type==='maxLength' && <p className='fs-6 text-danger'>&Phone number must have 10 digits</p>}
         {errors.phonenumber && <p>{errors.phonenumber.message}</p>}
       </div>
+
+      <div className='mb-3'>
+        <label htmlFor="" className='form-label '>Account Name</label>
+        <input type="text" {...register("acc_name",{required:true})} className='form-control '/>
+      </div>
       
       <div className='mb-3 '>
         <label htmlFor="" className='form-label '>State</label>

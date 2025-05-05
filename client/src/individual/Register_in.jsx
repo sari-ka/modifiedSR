@@ -52,8 +52,12 @@ function Register_in() {
         }})}className='form-control '/>
         {errors.email?.type==='required' && <p className='fs-6 text-danger'>*Email is required</p>}
         {errors.email && <p className='fs-6 text-danger'>*{errors.email.message}</p>}
-      
         </div>
+        
+      <div className='mb-3'>
+        <label htmlFor="" className='form-label '>Account Name</label>
+        <input type="text" {...register("acc_name",{required:true})} className='form-control '/>
+      </div>
       <div className='mb-3'>
         <label htmlFor="" className='form-label '>Address</label>
         <input type="text" {...register("address",{required:true})} className='form-control '/>

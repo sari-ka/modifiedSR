@@ -6,8 +6,6 @@ function Individual_profile() {
   const { currentIndividual } = useContext(IndividualContext);
   const [individual, setIndividual] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState('pending');
-  const [selectedReceipt, setSelectedReceipt] = useState(null);
-  const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
     const fetchIndividual = async () => {
@@ -64,15 +62,6 @@ function Individual_profile() {
                   <p><strong>Ref Name:</strong> {receipt.ref_name}</p>
                   <p><strong>Amount:</strong> ₹{receipt.amount}</p>
                   <p><strong>Submitted On:</strong> {new Date(receipt.submitted_on).toLocaleDateString()}</p>
-                  <button
-                    className="btn btn-info btn-sm mt-2 px-2 py-1"
-                    onClick={() => {
-                      setSelectedReceipt(receipt);
-                      setIsZoomed(false);
-                    }}
-                  >
-                    View Receipt
-                  </button>
                 </div>
               </div>
             </div>
@@ -80,56 +69,6 @@ function Individual_profile() {
         </div>
       ) : (
         <p className="text-center text-muted">No {selectedStatus} receipts found.</p>
-      )}
-
-      {selectedReceipt && (
-        <div className="modal show fade d-block" tabIndex="-1" onClick={() => {
-          setSelectedReceipt(null);
-          setIsZoomed(false);
-        }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg" onClick={e => e.stopPropagation()}>
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Receipt Details</h5>
-                <button type="button" className="btn-close" onClick={() => {
-                  setSelectedReceipt(null);
-                  setIsZoomed(false);
-                }}></button>
-              </div>
-              <div className="modal-body">
-                <p><strong>Type:</strong> {selectedReceipt.type}</p>
-                <p><strong>Reference:</strong> {selectedReceipt.ref_name}</p>
-                <p><strong>Amount:</strong> ₹{selectedReceipt.amount}</p>
-                <p><strong>Submitted On:</strong> {new Date(selectedReceipt.submitted_on).toLocaleString()}</p>
-                <img
-                  src={
-                    selectedReceipt.receipt_img.startsWith('uploads/')
-                      ? `http://localhost:9125/${selectedReceipt.receipt_img}`
-                      : `http://localhost:9125/uploads/${selectedReceipt.receipt_img}`
-                  }
-                  alt="Receipt"
-                  className="img-fluid mt-3 rounded"
-                  style={{
-                    cursor: isZoomed ? 'zoom-out' : 'zoom-in',
-                    transition: 'transform 0.3s ease',
-                    transform: isZoomed ? 'scale(1.8)' : 'scale(1)',
-                    maxHeight: isZoomed ? '90vh' : '400px',
-                    display: 'block',
-                    margin: '0 auto'
-                  }}
-                  onClick={() => setIsZoomed(prev => !prev)}
-                />
-
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary px-2 py-1" onClick={() => {
-                  setSelectedReceipt(null);
-                  setIsZoomed(false);
-                }}>Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

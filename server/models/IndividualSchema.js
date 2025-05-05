@@ -7,6 +7,7 @@ const IndividualSchema = new mongoose.Schema({
   password: { type: String, required: true },
   address: { type: String, required: true },
   upi_id: { type: String },
+  acc_name: { type: String },
   contact: { type: String, required: true },
 
   receipts: [
