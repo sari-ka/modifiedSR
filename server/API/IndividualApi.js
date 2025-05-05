@@ -3,9 +3,16 @@ const individualApp=exp.Router();
 const eah=require('express-async-handler')
 const Individual = require('../models/IndividualSchema')
 individualApp.use(exp.json())
+
 individualApp.get('/individual',eah(async(req,res)=>{
      const individualList = await Individual.find();
      res.send({message:"Individuals",payload:individualList})
+}))
+
+individualApp.get('/individual/:mail',eah(async(req,res)=>{
+    const mail=req.params.mail
+    const individual = await Individual.find({email : mail});
+    res.send({message:"Individual ",payload:individual})
 }))
 
 individualApp.post('/individual',eah(async(req,res)=>{

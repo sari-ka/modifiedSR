@@ -75,7 +75,16 @@ function Register_vi() {
         {errors.email?.type==='required' && <p className='fs-6 text-danger'>*Email is required</p>}
         {errors.email && <p className='fs-6 text-danger'>*{errors.email.message}</p>}
       </div>
-      
+
+      <div className='mb-3'>
+        <label className='form-label'>UPI ID</label>
+        <input type="text" {...register("upi_id", {
+          required: true,
+          pattern: { value: /^[\w.-]+@[\w.-]+$/, message: "Enter valid UPI ID (example@upi)" }
+        })} className='form-control' />
+        {errors.upiId && <p className='fs-6 text-danger'>*{errors.upiId.message}</p>}
+      </div>
+
       <div className='mb-3'>
         <label htmlFor="" className='form-label '>Password</label>
         <input type="password" {...register("password",{required:true,pattern:{

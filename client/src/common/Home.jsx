@@ -2,67 +2,90 @@ import React from "react";
 import ind from "../individual/individual.webp";
 import tru from "../trust/trust.webp";
 import vil from "../village/village.webp";
+import admin from "../admin/images.jpeg"
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Home.css";
 
 function Home() {
   return (
-    <div className="container">
-      <div className="d-flex justify-content-around align-items-center n">
-        {/* Village */}
-        <div className="text-center">
-          <Link to="/village">
-            <button className="btn">
-              <img
-                src={vil}
-                className="rounded-circle img-fluid option-img"
-                alt="Village"
-              />
-            </button>
-          </Link>
-          <p className="display-6 mt-3">Village</p>
-        </div>
+    <div className="container py-5">
+      {/* Heading */}
+      <div className="text-center mb-5">
+        <h1 className="fw-bold text-primary">Welcome to SupportRoots</h1>
+        <p className="lead text-secondary">Select your role</p>
+      </div>
 
-        {/* Trust */}
-        <div className="text-center mx-4">
-          <Link to="/trust">
-            <button className="btn">
-              <img
-                src={tru}
-                className="rounded-circle img-fluid option-img"
-                alt="Trust"
-              />
-            </button>
-          </Link>
-          <p className="display-6 mt-3">Trust</p>
-        </div>
+      {/* Background Card */}
+      <div className="p-4 bg-white rounded-4 shadow-lg" style={{ backgroundColor: "#f8f9fa" }}>
+        <div className="row g-4 justify-content-center">
+          {/* Village */}
+          <div className="col-md-6 col-lg-6 text-center">
+            <Link to="/village" className="text-decoration-none">
+              <div className="card bg-light border-0 shadow-sm hover-card">
+                <div className="card-body">
+                  <img
+                    src={vil}
+                    className="rounded-circle img-fluid mb-3"
+                    alt="Village"
+                    style={{ maxWidth: "150px" }}
+                  />
+                  <h5 className="text-dark">Village</h5>
+                </div>
+              </div>
+            </Link>
+          </div>
 
-        {/* Individual */}
-        <div className="text-center">
-          <Link to="/individual">
-            <button className="btn">
-              <img
-                src={ind}
-                className="rounded-circle img-fluid option-img"
-                alt="Individual"
-              />
-            </button>
-          </Link>
-          <p className="display-6 mt-3">Individual</p>
-        </div>
-        {/* Individual */}
-        <div className="text-center">
-          <Link to="/admin">
-            <button className="btn">
-              <img
-                src={ind}
-                className="rounded-circle img-fluid option-img"
-                alt="Individual"
-              />
-            </button>
-          </Link>
-          <p className="display-6 mt-3">Admin</p>
+          {/* Trust */}
+          <div className="col-md-6 col-lg-6 text-center">
+            <Link to="/trust" className="text-decoration-none">
+              <div className="card bg-light border-0 shadow-sm hover-card">
+                <div className="card-body">
+                  <img
+                    src={tru}
+                    className="rounded-circle img-fluid mb-3"
+                    alt="Trust"
+                    style={{ maxWidth: "150px" }}
+                  />
+                  <h5 className="text-dark">Trust</h5>
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Individual */}
+          <div className="col-md-6 col-lg-6 text-center">
+            <Link to="/individual" className="text-decoration-none">
+              <div className="card bg-light border-0 shadow-sm hover-card">
+                <div className="card-body">
+                  <img
+                    src={admin}
+                    className="rounded-circle img-fluid mb-3"
+                    alt="Individual"
+                    style={{ maxWidth: "150px" }}
+                  />
+                  <h5 className="text-dark">Individual</h5>
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Admin */}
+          <div className="col-md-6 col-lg-6 text-center">
+            <Link to="/admin" className="text-decoration-none">
+              <div className="card bg-light border-0 shadow-sm hover-card">
+                <div className="card-body">
+                  <img
+                    src={ind}
+                    className="rounded-circle img-fluid mb-3"
+                    alt="Admin"
+                    style={{ maxWidth: "150px", maxHeight: "150px" }}
+                  />
+                  <h5 className="text-dark">Admin</h5>
+                </div>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

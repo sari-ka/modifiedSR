@@ -27,3 +27,14 @@
     width: 100vw;
   }
   
+  .hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+  }
+  
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+  }
+  

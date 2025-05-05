@@ -7,43 +7,14 @@ const TrustSchema = new mongoose.Schema({
   password: { type: String, required: true },
   address: { type: String, required: true },
   contact: { type: String, required: true },
+  upi_id: { type: String },
   approved: { type: Boolean, default: false }, 
 
-  projects: {
-    past: [
-      {
-        title: String,
-        description: String,
-        completionDate: Date,
-        money:Number
-      },
-    ],
-    ongoing: [
-      {
-        title: String,
-        description: String,
-        startDate: Date,
-        money:Number,
-        progressUpdates: [
-          {
-            date: { type: Date, default: Date.now },
-            update: String,
-          },
-        ],
-      },
-    ],
-    upcoming: [
-      {
-        title: String,
-        description: String,
-        money:Number
-      },
-    ],
-  },
   funding: {
     total_received: { type: Number, default: 0 },
     total_disbursed: { type: Number, default: 0 },
   },
+  
 
   feedback: [
     {

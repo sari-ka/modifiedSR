@@ -34,6 +34,8 @@ import Unver_tr from './admin/unver_tr'
 import Verified_v from './admin/verified_v'
 import Verified_tr from './admin/verified_tr'
 import AdminHeader from './admin/AdminHeader'
+import Village_i from './common/Village_i'
+import Trust_i from './common/Trust_i'
 function App() {
 
   let b = createBrowserRouter([
@@ -172,11 +174,11 @@ function App() {
             },
             {
               path:'villages',
-              element:<Villages/>
+              element:<Village_i/>
             },
             {
               path:'trusts',
-              element:<Trusts/>
+              element:<Trust_i/>
             }         
           ]
           }

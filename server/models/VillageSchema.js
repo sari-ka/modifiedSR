@@ -7,6 +7,7 @@ const VillageSchema = new mongoose.Schema({
   state: { type: String, required: true },
   pincode: { type: String, required: true },
   contact: { type: String, required: true },
+  upi_id: { type: String },
   approved: { type: Boolean, default: false },
   sarpanch: { type: Boolean, default: true },
 
